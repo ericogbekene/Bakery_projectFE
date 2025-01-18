@@ -1,10 +1,8 @@
+@import url('https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300..800;1,300..800&family=Poltawski+Nowy:ital,wght@0,400..700;1,400..700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
-body {
-  font-family: Poltawski Nowy, Arial, Helvetica, sans-serif;
-}
 
 @layer utilities {
   .text-balance {
@@ -40,6 +38,7 @@ body {
     --chart-5: 27 87% 67%;
     --radius: 0.5rem;
   }
+
   .dark {
     --background: 240 10% 3.9%;
     --foreground: 0 0% 98%;
@@ -72,7 +71,16 @@ body {
   * {
     @apply border-border;
   }
+
   body {
     @apply bg-background text-foreground;
   }
+}
+
+.polta {
+  font-family: "Poltawski Nowy", serif;
+}
+
+.sans {
+  font-family: "Open Sans", serif;
 }
