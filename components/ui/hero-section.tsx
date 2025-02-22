@@ -9,7 +9,7 @@ export default function HeroSection() {
         className="absolute inset-0 bg-cover bg-center bg-no-repeat"
         style={{
           backgroundImage:
-            'url("/home/ericomedia/workplace/Bakery_projectFE/assets/images/Frame 9.png")',
+            'url("https://unsplash.com/photos/a-tall-palm-tree-sitting-in-the-middle-of-a-park-0RagbnZjdeE")',
         }}
       >
         <div className="absolute inset-0 bg-black/40" /> {/* Overlay for better text readability */}
@@ -23,9 +23,12 @@ export default function HeroSection() {
           <p className="text-lg md:text-xl text-white/90 mb-8">
           From buttery snacks to delicious cakes, we bring you irresistible treats baked daily with care. Every bite is a moment of pure delight.
           </p>
-          <div>
-            <Button size="lg" className="bg-pink-600 hover:bg-pink-700 text-white px-8 py-6 text-lg">
-              Shop Now
+          <div className="flex gap-2">
+            <Button size="sm" className="bg-pink-600 hover:bg-pink-700 text-white px-8 py-6 text-lg">
+              Order Now
+            </Button>
+            <Button size="sm" className="bg-pink-600 hover:bg-pink-700 text-white px-8 py-6 text-lg">
+              Make Custom Orders
             </Button>
           </div>
         </div>
