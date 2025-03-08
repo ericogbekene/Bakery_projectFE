@@ -1,18 +1,18 @@
 "use client";
 import React from "react";
 import Image from "next/image";
-import cakeOne from "../../assets/images/cake1.png";
-import cakeTwo from "../../assets/images/cake2.png";
-import cakeThree from "../../assets/images/cake3.png";
-import cakeFour from "../../assets/images/cake4.png";
-import foundersImg from "../../assets/images/founders.png";
-import CoreValue from "../../assets/images/Corevalue.png";
+import cakeOne from "@/public/images/cake1.png";
+import cakeTwo from "@/public/images/cake2.png";
+import cakeThree from "@/public/images/cake3.png";
+import cakeFour from "@/public/images/cake4.png";
+import foundersImg from "@/public/images/founders.png";
+import CoreValue from "@/public/images/Corevalue.png";
 import { ChevronRightIcon } from "@radix-ui/react-icons";
-import icon1 from "../../assets/images/peoples.png";
-import icon2 from "../../assets/images/cross-society.png";
-import icon3 from "../../assets/images/heart-rate.png";
-import icon4 from "../../assets/images/lotus.png";
-import icon5 from "../../assets/images/shield.png";
+import icon1 from "@/public/images/peoples.png";
+import icon2 from "@/public/images/cross-society.png";
+import icon3 from "@/public/images/heart-rate.png";
+import icon4 from "@/public/images/lotus.png";
+import icon5 from "@/public/images/shield.png";
 
 type Props = {};
 

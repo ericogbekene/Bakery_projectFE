@@ -1,4 +1,4 @@
-import Contact from '@/components/contact-us/Contact'
+import Contact from '@/src/components/contact-us/Contact'
 import React from 'react'
 
 type Props = {}

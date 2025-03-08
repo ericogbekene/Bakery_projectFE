@@ -1,13 +1,13 @@
 import type { Metadata } from "next";
-import { Playfair_Display } from 'next/font/google'
 import "./globals.css";
-import Navbar from "@/components/shared/Navbar/Navbar";
-import Footer from "@/components/shared/Footer/Footer";
+import Navbar from "@/src/components/shared/Navbar/Navbar";
+import Footer from "@/src/components/shared/Footer/Footer";
+import { Poltawski_Nowy } from "next/font/google";
 
-const playfair = Playfair_Display({
-  subsets: ['latin'],
-  variable: '--font-playfair-display',
-})
+const poltawskiNowy = Poltawski_Nowy({
+  variable: "--font-poltawski-nowy",
+  subsets: ["latin"],
+});
 
 export const metadata: Metadata = {
   title: "M&C Bakery",
@@ -22,7 +22,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`antialiased`}
+        className={`${poltawskiNowy.variable} antialiased`}
       >
         <Navbar/>
         {children}

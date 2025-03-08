@@ -1,6 +1,6 @@
 import Image from "next/image";
 import featuredImage from '@/assets/images/pexels-divinetechygirl-1181569.jpg'
-import { Button } from "./button";
+import { Button } from "@/components/ui/button";
 
 const FeatureSection = () => {
     return (
