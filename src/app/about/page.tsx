@@ -1,4 +1,4 @@
-import About from '@/components/about-us/About'
+import About from '@/src/components/about-us/About'
 import React from 'react'
 
 type Props = {}
