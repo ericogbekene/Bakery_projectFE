@@ -18,63 +18,63 @@ interface CupcakeItem {
 const CakesPage = () => {
   const cupcakes: CupcakeItem[] = [
     {
-      id: "coconut",
+      id: "1",
       title: "Coconut Cupcakes",
       description:
         "Our coconut cupcakes are made with coconut milk and topped with fluffy coconut buttercream frosting. A real treat for the true coconut aficionado.",
       image: "/images/coconut-cake.png",
     },
     {
-      id: "chocolate",
+      id: "2",
       title: "Chocolate Cupcakes",
       description:
         "Our classic chocolate cupcakes are rich and moist, topped with smooth chocolate buttercream frosting for the ultimate treat.",
       image: "/images/coconut-cake.png",
     },
     {
-      id: "marble",
+      id: "3",
       title: "Marble Cupcakes",
       description:
         "Our marble cupcakes are a perfect blend of vanilla and chocolate swirled together and topped with a dual frosting for a delicious mix.",
       image: "/images/coconut-cake.png",
     },
     {
-      id: "plain",
+      id: "4",
       title: "Plain Cupcakes",
       description:
         "Our plain cupcakes are light and fluffy with a subtle vanilla flavor. Perfect for those who prefer a simpler treat.",
       image: "/images/coconut-cake.png",
     },
     {
-      id: "red-velvet",
+      id: "5",
       title: "Red Velvet Cupcakes",
       description:
         "Our red velvet cupcakes are rich and velvety with a hint of cocoa, topped with cream cheese frosting for a classic combination.",
       image: "/images/coconut-cake.png",
     },
     {
-      id: "vanilla",
+      id: "6",
       title: "Vanilla Cupcakes",
       description:
         "A classic cupcake with light and airy vanilla cake topped with smooth vanilla buttercream frosting for a timeless treat.",
       image: "/images/coconut-cake.png",
     },
     {
-      id: "swirl",
+      id: "7",
       title: "Swirl",
       description:
         "Our signature cake with beautiful blue swirl decoration. Perfect for birthdays and special celebrations.",
       image: "/images/coconut-cake.png",
     },
     {
-      id: "flowers",
+      id: "8",
       title: "Flowers",
       description:
         "A delicate cake adorned with handcrafted buttercream flowers. Ideal for weddings and elegant occasions.",
       image: "/images/coconut-cake.png",
     },
     {
-      id: "mixer",
+      id: "9",
       title: "Mixer",
       description:
         "Our specialty cake with a mix of flavors and decorative elements for those who want a bit of everything.",
