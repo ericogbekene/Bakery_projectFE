@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import Navbar from "@/src/components/shared/Navbar/Navbar";
+import MainNavbar from "../components/shared/Main Navbar/MainNavbar";
 import Footer from "@/src/components/shared/Footer/Footer";
 import { Poltawski_Nowy } from "next/font/google";
 
@@ -24,7 +24,7 @@ export default function RootLayout({
       <body
         className={`${poltawskiNowy.variable} antialiased`}
       >
-        <Navbar/>
+        <MainNavbar/>
         {children}
         <Footer/>
       </body>
