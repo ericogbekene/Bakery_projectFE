@@ -1,0 +1,16 @@
+@import "tailwindcss";
+
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+  --color-primary-100: #F4DDE7;
+  --color-primary-300: #EDC6D7;
+  --color-primary-1100: #C85387;
+}
+
+@theme inline {
+  --font-nowy: var(--font-poltawski-nowy);
+  --color-primary-100: var(--color-primary-100);
+  --color-primary-300: var(--color-primary-300);
+  --color-primary-1100: var(--color-primary-1100);
+}
