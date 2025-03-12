@@ -1,4 +1,3 @@
-import Image from "next/image";
 import featuredImage from "@/public/images/background.jpg";
 import { Button } from "@/components/ui/button";
 

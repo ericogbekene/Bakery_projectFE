@@ -32,7 +32,7 @@ const WhyChooseUs = () => {
               <div>
                 <h3 className="text-xl font-semibold mb-2">Quality Ingredients & Freshness</h3>
                 <p className="text-gray-700">
-                We deliver superior taste by baking fresh daily with high-quality ingredients. You’ll enjoy the authentic, home-baked flavors that mass-produced goods can’t replicate, making every bite an indulgent experience.
+                We deliver superior taste by baking fresh daily with high-quality ingredients. You`&apos;`ll enjoy the authentic, home-baked flavors that mass-produced goods can’t replicate, making every bite an indulgent experience.
                 </p>
               </div>
               
@@ -40,7 +40,7 @@ const WhyChooseUs = () => {
               <div>
                 <h3 className="text-xl font-semibold mb-2">Customization & Personal Touch</h3>
                 <p className="text-gray-700">
-                We offer personalized services for events such as birthdays, weddings, and celebrations. Whether it's a custom-designed cake or a special order of pastries, you get a bespoke experience that caters to your unique needs.
+                We offer personalized services for events such as birthdays, weddings, and celebrations. Whether it`&apos;`s a custom-designed cake or a special order of pastries, you get a bespoke experience that caters to your unique needs.
                 </p>
               </div>
               
@@ -48,7 +48,7 @@ const WhyChooseUs = () => {
               <div>
                 <h3 className="text-xl font-semibold mb-2">Unmatched flavour</h3>
                 <p className="text-gray-700">
-                A bakery delivers superior taste by baking fresh daily with high-quality ingredients. You’ll enjoy the authentic, home-baked flavors that mass-produced goods can’t replicate, making every bite an indulgent experience.
+                A bakery delivers superior taste by baking fresh daily with high-quality ingredients. You`&apos;`ll enjoy the authentic, home-baked flavors that mass-produced goods can’t replicate, making every bite an indulgent experience.
                 </p>
               </div>
               
