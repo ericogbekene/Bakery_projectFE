@@ -1,52 +1,34 @@
-import Image from "next/image";
-import featuredImage from '@/assets/images/pexels-divinetechygirl-1181569.jpg'
+import featuredImage from "@/public/images/background.jpg";
 import { Button } from "@/components/ui/button";
 
-const FeatureSection = () => {
-    return (
-        <>
-            <section>
-                <div className="flex flex-col items-center justify-center p-3 space-x-4 bg-teal-500">
-                    <h1 className="text-3xl">Why choose Us</h1>
-                    <div className="flex items-center justify-evenly gap-8 w-4/5 rounded-2xl min-h-24 bg-">
-                        <div className="img-left flex justify-start ">
-                            <Image src={featuredImage} alt='image' width={100} height={50} />
-                        </div>
-                        <div className="p-5 m-5 flex-col gap-5">
-                            <h1>Healthy Snacks</h1>
-                            <p>Lorem, ipsum dolor sit amet consectetur adipisicing.</p>
-                            <h1>Healthy Snacks</h1>
-                            <p>Lorem, ipsum dolor sit amet consectetur adipisicing.</p>
-                            <h1>Healthy Snacks</h1>
-                            <p>Lorem, ipsum dolor sit amet consectetur adipisicing.</p>
+const LastSection = () => {
+  return (
+    <section className="w-full max-w-[1248px] mx-auto px-4 mb-12">
+      <div
+        className="relative w-full h-[352px] rounded-[12px] flex flex-col items-center justify-center px-6 py-10 text-center"
+        style={{
+          backgroundImage: `url(${featuredImage.src})`,
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+        }}
+      >
+        {/* Overlay for better readability */}
+        <div className="absolute inset-0 bg-black/50 rounded-[12px]"></div>
 
-                            <div className="cta-btns">
-                                <Button> Get Started </Button>
-                            </div>
+        {/* Content */}
+        <div className="relative z-10">
+          <h1 className="text-white text-2xl md:text-3xl font-semibold font-nowy">
+            Give your tastebuds the treat it deserves
+          </h1>
+          <div className="mt-4">
+            <Button className="bg-[#C85387] text-white px-6 py-3 rounded-lg cursor-pointer">
+              Order Now
+            </Button>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+};
 
-                        </div>
-
-
-
-
-
-                    </div>
-                    
-                    <div className="flex-col items-center justify-center p-6 m-m-6 gap-5 bg-[url('')] bg-cover bg-center">
-
-                        <h1 className="text-indigo-50">
-                            Give your tastebuds the treat it deserves
-                        </h1>
-                        <div className="cta-btns">
-                            <Button> Get Started </Button>
-                        </div>
-                    </div>
-                </div>
-            </section>
-        </>
-    )
-}
-
-export default FeatureSection;
-
-
+export default LastSection;

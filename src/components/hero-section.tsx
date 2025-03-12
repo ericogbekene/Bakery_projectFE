@@ -50,13 +50,13 @@ export default function HeroSection() {
             <div className="flex gap-2 justify-start">
               <Button
                 size="sm"
-                className="bg-[#C85387] hover:bg-pink-700 text-white px-8 py-6 text-lg"
+                className="bg-[#C85387] hover:bg-pink-700 text-white px-8 py-6 text-lg cursor-pointer"
               >
                 Order Now
               </Button>
               <Button
                 size="sm"
-                className="bg-transparent text-[#C85387] px-8 py-6 text-lg border border-[#C85387]"
+                className="bg-transparent text-[#C85387] px-10 py-6 text-lg border border-[#C85387] cursor-pointer"
               >
                 Make Custom Orders
               </Button>
@@ -101,7 +101,7 @@ export default function HeroSection() {
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
               <Button
                 size="sm"
-                className="bg-[#C85387] hover:bg-pink-700 text-white px-6 py-4 text-base"
+                className="bg-[#C85387] hover:bg-pink-700 text-white px-6 py-4 text-base cursor-pointer"
               >
                 Order Now
               </Button>
