@@ -1,4 +1,4 @@
-import Contact from "@/src/components/contact-us/Contact";
+
 import HeroSection from "@/src/components/hero-section";
 import CategoriesSection from "@/src/components/categorysection";
 import FeaturedSection from "@/src/components/featuredproductssection";
