@@ -1,3 +1,4 @@
+
 import HeroSection from "@/src/components/hero-section";
 import CategoriesSection from "@/src/components/categorysection";
 import FeaturedSection from "@/src/components/featuredproductssection";
