@@ -1,9 +1,7 @@
 import About from '@/src/components/about-us/About'
 import React from 'react'
 
-type Props = {}
-
-function page({}: Props) {
+function page() {
   return (
     <div><About/></div>
   )

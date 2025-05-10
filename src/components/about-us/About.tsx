@@ -14,9 +14,7 @@ import icon3 from "@/public/images/heart-rate.png";
 import icon4 from "@/public/images/lotus.png";
 import icon5 from "@/public/images/shield.png";
 
-type Props = {};
-
-export default function About({}: Props) {
+export default function About() {
   return (
     <div className="flex flex-col items-center justify-center w-full p-2">
       <div>
@@ -46,14 +44,14 @@ export default function About({}: Props) {
               className="w-[400px] h-[350px] rounded"
             />
             <p className="w-full md:w-[500px] text-sm font-sans px-4 leading-9 text-[#575154]">
-              The name M and C comes from the initials of two sisters, Mary and
+              {`The name M and C comes from the initials of two sisters, Mary and
               Clara, who share a passion for pastry and baking arts. At the age
               of eight, Mary fell in love with baking, and in 2016, she obtained
               her Cake Design Certificate from Lambert Academy, certifying her
               skills. Clara began baking in 2014 while pursuing a master's
               degree in international business. In 2015, the sisters combined
               their talents to form M and C Cakes, bringing artistry and
-              professionalism to every creation.
+              professionalism to every creation.`}
             </p>
           </div>
         </div>
