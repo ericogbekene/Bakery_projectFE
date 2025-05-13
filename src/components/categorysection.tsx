@@ -5,7 +5,7 @@ const CategoriesSection = () => {
   const categories = [
     { name: "Cakes", link: "/cakes" },
     { name: "Pastries", link: "/pastries" },
-    { name: "Loaves", link: "/loaves" },
+    { name: "Cupcakes", link: "/cupcakes" },
   ];
 
   return (

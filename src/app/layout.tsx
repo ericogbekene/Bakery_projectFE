@@ -3,6 +3,7 @@ import "./globals.css";
 import MainNavbar from "../components/shared/Main Navbar/MainNavbar";
 import Footer from "@/src/components/shared/Footer/Footer";
 import { Poltawski_Nowy } from "next/font/google";
+import { Toaster } from "sonner";
 
 const poltawskiNowy = Poltawski_Nowy({
   variable: "--font-poltawski-nowy",
@@ -25,6 +26,7 @@ export default function RootLayout({
         className={`${poltawskiNowy.variable} antialiased`}
       >
         <MainNavbar/>
+         <Toaster richColors position="top-center" />
         {children}
         <Footer/>
       </body>
