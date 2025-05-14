@@ -5,10 +5,17 @@ import { useState } from "react"
 import { ChevronDown, ShoppingCart } from "lucide-react"
 
 import { Button } from "@/src/components/ui/button"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/src/components/ui/dropdown-menu"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/src/components/ui/dropdown-menu";
+import { useCartStore } from "@/src/lib/store/cartstore";
 
 export default function MainNavbar() {
   const [isOpen, setIsOpen] = useState(false)
+  // const { items } = useCartStore();
+const cartCount = useCartStore((state) =>
+  state.items.reduce((sum, item) => sum + item.quantity, 0)
+);
+
+
 
   return (
     <nav className="bg-pink-100">
@@ -38,7 +45,15 @@ export default function MainNavbar() {
                   <Link href="/products/books">Contact us</Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem>
-                  <Link href="/products/books">Cart</Link>
+                 <Link href="/cart" className="relative text-gray-600 hover:text-gray-900 flex items-center">
+  <ShoppingCart className="h-5 w-5 mr-1" />
+  <span>Cart</span>
+  {cartCount > 0 && (
+    <span className="absolute -top-2 -right-3 bg-red-500 text-white text-xs rounded-full px-1.5 py-0.5">
+      {cartCount}
+    </span>
+  )}
+</Link>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -51,9 +66,18 @@ export default function MainNavbar() {
             <Link href="/contact" className="text-gray-600 hover:text-gray-900">
               Contact us
             </Link>
-            <Link href="/support" className="text-gray-600 hover:text-gray-900">
+            {/* <Link href="/cart" className="text-gray-600 hover:text-gray-900">
               Cart
-            </Link>
+            </Link> */}
+            <Link href="/cart" className="relative text-gray-600 hover:text-gray-900 flex items-center">
+  <ShoppingCart className="h-5 w-5 mr-1" />
+  <span>Cart</span>
+  {cartCount > 0 && (
+    <span className="absolute -top-2 -right-3 bg-red-500 text-white text-xs rounded-full px-1.5 py-0.5">
+      {cartCount}
+    </span>
+  )}
+</Link>
           </div>
           <div className="hidden sm:flex items-center">
             <Button className="bg-[#C85387] text-white">
@@ -135,11 +159,17 @@ export default function MainNavbar() {
               Support
             </Link>
           </div>
-          <div className="pt-4 pb-3 border-t border-gray-200">
-            <Button className="w-full">
-              <ShoppingCart className="mr-2 h-4 w-4" /> Cart
-            </Button>
-          </div>
+         <Link href="/cart" className="w-full flex items-center justify-between px-3 py-2 text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50">
+  <div className="flex items-center">
+    <ShoppingCart className="mr-2 h-4 w-4" /> Cart
+  </div>
+  {cartCount > 0 && (
+    <span className="inline-flex items-center justify-center bg-red-500 text-white text-xs rounded-full px-1.5 py-0.5">
+      {cartCount}
+    </span>
+  )}
+</Link>
+
         </div>
       )}
     </nav>
