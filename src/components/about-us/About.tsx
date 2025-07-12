@@ -37,7 +37,7 @@ export default function About() {
        
         <div className="p-2 m-2">
           <h1 className="text-center font-bold">Our Story</h1>
-          <div className="flex flex-col md:flex-row gap-3 items-center md:items-start">
+          <div className="flex flex-col justify-between md:flex-row gap-3 items-center md:items-start">
             <Image
               src={foundersImg}
               alt="founders"
@@ -130,7 +130,7 @@ export default function About() {
         </section>
 
        
-        <section className="w-full max-w-[1200px] flex flex-wrap sm:flex-col md:flex-row justify-center items-center my-4">
+        <section className="w-full max-w-[1200px] flex flex-wrap sm:flex-col md:flex-row justify-between items-center my-4">
           <Image src={CoreValue} alt="img" className="w-[400px] h-[200px]" />
           <div className="w-[400px] h-[200px] text-center md:text-left">
             <h1 className="font-bold ">Our Core Values</h1>

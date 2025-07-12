@@ -9,7 +9,7 @@ const Footer = () => {
           <h3 className="text-lg font-semibold mb-3 font-nowy">Address</h3>
           <p className="text-sm">123 Bakery St, Lagos, Nigeria</p>
           <p className="text-sm">+234 800 123 4567</p>
-          <p className="text-sm">info@bakery.com</p>
+          <p className="text-sm">info@mandccakes.com</p>
           <ul className="space-y-2">
             <li>
             Phone: 08100009968
