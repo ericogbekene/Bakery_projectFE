@@ -42,7 +42,7 @@ export default function MainNavbar() {
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
-            <Link href="/deals" className="text-gray-600 hover:text-gray-900">
+            <Link href="/gallery" className="text-gray-600 hover:text-gray-900">
              Gallery
             </Link>
             <Link href="/about" className="text-gray-600 hover:text-gray-900">
