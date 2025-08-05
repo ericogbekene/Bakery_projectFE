@@ -6,7 +6,6 @@ import NextTopLoader from "nextjs-toploader";
 import "./globals.css";
 
 const openSans = Open_Sans({
-  variable: "--font-open-sans",
   subsets: ["latin"],
 });
 

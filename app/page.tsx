@@ -85,8 +85,9 @@ export default function Page() {
                   variant={"outline"}
                   size="lg"
                   className="border-primary text-primary hover:bg-primary-200 bg-transparent"
+                  asChild
                 >
-                  Make custom order
+                  <Link href="/custom-order">Make custom order</Link>
                 </Button>
               </div>
             </div>
