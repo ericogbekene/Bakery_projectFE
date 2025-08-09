@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { poltawskiNowy } from "@/lib/font";
 import { cn } from "@/lib/utils";
 import Image from "next/image";
+import Link from "next/link";
 import { OTHERS_ITEMS } from ".";
 
 export default function Page() {
@@ -29,14 +30,13 @@ export default function Page() {
               >
                 {item.title}
               </h6>
-              <p>
-                {item.desc}
-              </p>
+              <p>{item.desc}</p>
               <Button
                 className="text-primary hover:text-primary-700 mx-auto block w-fit text-base underline"
                 variant="link"
+                asChild
               >
-                Order now
+                <Link href={`/menu/others/order`}>Order now</Link>
               </Button>
             </div>
           </div>

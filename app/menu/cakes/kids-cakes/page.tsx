@@ -5,6 +5,7 @@ import { poltawskiNowy } from "@/lib/font";
 import { cn } from "@/lib/utils";
 import Image from "next/image";
 import { KIDS_CAKES } from ".";
+import Link from "next/link";
 
 export default function Page() {
   return (
@@ -33,8 +34,9 @@ export default function Page() {
               <Button
                 className="text-primary hover:text-primary-700 mx-auto block w-fit text-base underline"
                 variant="link"
+                asChild
               >
-                Order now
+                <Link href={`/menu/cakes/order`}>Order now</Link>
               </Button>
             </div>
           </div>

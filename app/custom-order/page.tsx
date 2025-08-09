@@ -48,7 +48,10 @@ export default function Page() {
       <Container className="my-12 space-y-8 lg:my-16">
         <header className="text-center">
           <h2
-            className={cn(poltawskiNowy.className, "mb-1 text-3xl lg:text-4xl")}
+            className={cn(
+              poltawskiNowy.className,
+              "text-dark-text mb-1 text-3xl lg:text-4xl",
+            )}
           >
             Custom Orders
           </h2>
@@ -159,7 +162,7 @@ export default function Page() {
                     <Textarea
                       {...field}
                       placeholder="Tell us if you want a 'Happy Birthday' written on the cake or cake board or any  extra information"
-                      className="bg-custom-green-100 w-full h-32"
+                      className="bg-custom-green-100 h-32 w-full"
                     />
                   </FormControl>
                   <FormMessage />
