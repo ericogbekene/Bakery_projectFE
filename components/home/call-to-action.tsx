@@ -3,6 +3,7 @@ import { poltawskiNowy } from "@/lib/font";
 import { cn } from "@/lib/utils";
 import Container from "../shared/container";
 import { Button } from "../ui/button";
+import Link from "next/link";
 
 const CallToAction = () => {
   return (
@@ -20,8 +21,8 @@ const CallToAction = () => {
       >
         Give your tastebuds the treat it deserves
       </h5>
-      <Button size={"lg"} className="w-40 max-lg:w-36">
-        Order now
+      <Button size={"lg"} className="w-40 max-lg:w-36" asChild>
+        <Link href="/custom-order">Order now</Link>
       </Button>
     </Container>
   );

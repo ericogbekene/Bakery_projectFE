@@ -4,6 +4,7 @@ import { cn } from "@/lib/utils";
 import Image from "next/image";
 import Container from "../shared/container";
 import { Button } from "../ui/button";
+import Link from "next/link";
 
 const WHY_CHOOSE_US = [
   {
@@ -58,8 +59,8 @@ const WhyChooseUs = () => {
               <p>{item.description}</p>
             </div>
           ))}
-          <Button size={"lg"} className="w-40 max-lg:hidden">
-            Order now
+          <Button size={"lg"} className="w-40 max-lg:hidden" asChild>
+            <Link href="/custom-order">Order now</Link>
           </Button>
         </div>
       </div>

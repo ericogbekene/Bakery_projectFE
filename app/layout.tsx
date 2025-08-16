@@ -1,5 +1,6 @@
 import Footer from "@/components/layout/footer";
 import Header from "@/components/layout/header";
+import QueryProvider from "@/components/providers/query-provider";
 import type { Metadata } from "next";
 import { Open_Sans } from "next/font/google";
 import NextTopLoader from "nextjs-toploader";
@@ -23,9 +24,11 @@ export default function RootLayout({
     <html lang="en">
       <body className={`${openSans.className} text-text antialiased`}>
         <NextTopLoader showSpinner={false} color="#c85387" />
-        <Header />
-        {children}
-        <Footer />
+        <QueryProvider>
+          <Header />
+          {children}
+          <Footer />
+        </QueryProvider>
       </body>
     </html>
   );

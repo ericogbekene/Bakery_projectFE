@@ -3,6 +3,7 @@ import { poltawskiNowy } from "@/lib/font";
 import { cn } from "@/lib/utils";
 import { Button } from "../ui/button";
 import Container from "./container";
+import Link from "next/link";
 
 const MenuHero = ({ hideButton = false }: { hideButton?: boolean }) => {
   return (
@@ -29,8 +30,9 @@ const MenuHero = ({ hideButton = false }: { hideButton?: boolean }) => {
             className="border-primary text-primary bg-transparent text-base font-medium"
             size="lg"
             variant={"outline"}
+            asChild
           >
-            Make custom orders
+            <Link href="/custom-order">Make custom orders</Link>
           </Button>
         </Container>
       )}
