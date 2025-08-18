@@ -340,6 +340,12 @@ const mockProducts: Product[] = [
 
 export const useProductStore = create<ProductStore>((set, get) => ({
   products: mockProducts,
-  getProductsByType: (type) => get().products.filter((p) => p.product === type),
-  getProductById: (id) => get().products.find((p) => p.id === id),
+
+  getProductsByType: (type) => {
+    return get().products.filter((product) => product.product === type);
+  },
+
+  getProductById: (id) => {
+    return get().products.find((product) => product.id === id);
+  }
 }));
