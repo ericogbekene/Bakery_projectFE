@@ -17,8 +17,7 @@
     "test:integration": "jest --testPathPattern=integration",
     "test:e2e": "jest --testPathPattern=e2e",
     "test:unit": "jest --testPathPattern=unit",
-    //"postinstall": "prisma generate" // commented out for external API testing
-   
+    "postinstall": "prisma generate" 
   },
   "dependencies": {
     "@fortawesome/fontawesome-svg-core": "^6.7.2",
