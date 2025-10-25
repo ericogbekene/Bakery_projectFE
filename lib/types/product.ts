@@ -10,6 +10,7 @@ export interface Product {
   updatedAt: Date
 }
 
+
 export interface Category {
   id: string
   name: string

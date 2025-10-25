@@ -48,8 +48,10 @@ export async function GET(request: NextRequest) {
     });
 
     // Transform external products to internal format
-    const transformedProducts = externalProducts.map(product => 
-      transformExternalProduct(product) as ProductWithCategory
+
+    //should be externalProducts here 
+    const transformedProducts = externalProducts.map(products => 
+      transformExternalProduct(products ) as ProductWithCategory
     );
 
     const response: ApiResponse<ProductWithCategory[]> = {

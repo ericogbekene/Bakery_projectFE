@@ -2,8 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { ProductWithCategory, Category, ApiResponse } from '@/lib/types/product';
 import { ExternalProduct, ExternalCategory, ExternalApiResponse } from '@/lib/types/external-api';
-import { transformExternalProduct, transformExternalCategory, transformExternalProductWithCategory } from '@/lib/utils/data-transformer';
-import { getDataSourceConfig, getPrimaryDataSource, getFallbackDataSource } from '@/lib/config/data-sources';
+import { transformExternalProduct, transformExternalCategory } from '@/lib/utils/data-transformer';
 import { externalApiCircuitBreaker } from '@/lib/circuit-breaker';
 import externalApiClient from '@/lib/api/external-client';
 
@@ -115,10 +114,6 @@ async function fetchLocalCategories(options: UseHybridDataOptions = {}): Promise
 export function useHybridProducts(options: UseHybridDataOptions = {}): UseHybridDataReturn<ProductWithCategory> {
   const [dataSource, setDataSource] = useState<'external' | 'local' | 'hybrid'>('hybrid');
   const queryClient = useQueryClient();
-
-  const config = getDataSourceConfig();
-  const primarySource = getPrimaryDataSource('products');
-  const fallbackSource = getFallbackDataSource('products');
 
   // External API query
   const externalQuery = useQuery({

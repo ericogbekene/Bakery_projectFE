@@ -1,7 +1,7 @@
 const ENDPOINTS = {
-  BASE_URL: process.env.NEXT_PUBLIC_EXTERNAL_API_URL || "",
+  BASE_URL: process.env.NEXT_PUBLIC_EXTERNAL_API_URL || "https://api.mandccakes.com/api",
   LOCAL_API: "/api",
-  EXTERNAL_API: process.env.NEXT_PUBLIC_EXTERNAL_API_URL || "https://api.mandccakes.com",
+  EXTERNAL_API: process.env.NEXT_PUBLIC_EXTERNAL_API_URL || "https://api.mandccakes.com/api",
   
   // Local API endpoints
   LOCAL: {
@@ -11,14 +11,39 @@ const ENDPOINTS = {
     USERS: "/api/users",
   },
   
-  // External API endpoints
+  // External API endpoints (M&C Cakes API)
   EXTERNAL: {
-    PRODUCTS: "/products",
-    CATEGORIES: "/categories",
-    ORDERS: "/orders",
-    USERS: "/users",
-    HEALTH: "/health",
-    AUTH: "/auth/login",
+    AUTH: {
+      LOGIN: "/accounts/login/",
+      REGISTER: "/accounts/register/",
+      REFRESH: "/accounts/token/refresh/",
+    },
+    PRODUCTS: {
+      LIST: "/products/products/",
+      DETAIL: "/products/products/",
+      SEARCH: "/products/products/search/",
+      FEATURED: "/products/products/featured/",
+      LOW_STOCK: "/products/products/low_stock/",
+    },
+    CATEGORIES: {
+      LIST: "/products/categories/",
+      DETAIL: "/products/categories/",
+    },
+    CART: {
+      ADD: "/cart/cart/add/",
+      REMOVE: "/cart/cart/remove/",
+      LIST: "/cart/cart/",
+      CLEAR: "/cart/cart/clear/",
+    },
+    ORDERS: {
+      CREATE: "/orders/create/",
+      DETAIL: "/orders/",
+    },
+    PAYMENTS: {
+      INITIALIZE: "/payments/initialize/",
+      VERIFY: "/payments/verify/",
+    },
+    HEALTH: "/health/",
   },
   
   // Hybrid endpoints (unified)

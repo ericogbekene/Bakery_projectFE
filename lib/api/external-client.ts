@@ -83,28 +83,28 @@ class ExternalApiClient {
   /**
    * Generic GET request
    */
-  async get<T = any>(url: string, config?: AxiosRequestConfig): Promise<AxiosResponse<T>> {
+  async get<T = unknown>(url: string, config?: AxiosRequestConfig): Promise<AxiosResponse<T>> {
     return this.client.get<T>(url, config);
   }
 
   /**
    * Generic POST request
    */
-  async post<T = any>(url: string, data?: any, config?: AxiosRequestConfig): Promise<AxiosResponse<T>> {
+  async post<T = unknown>(url: string, data?: unknown, config?: AxiosRequestConfig): Promise<AxiosResponse<T>> {
     return this.client.post<T>(url, data, config);
   }
 
   /**
    * Generic PUT request
    */
-  async put<T = any>(url: string, data?: any, config?: AxiosRequestConfig): Promise<AxiosResponse<T>> {
+  async put<T = unknown>(url: string, data?: unknown, config?: AxiosRequestConfig): Promise<AxiosResponse<T>> {
     return this.client.put<T>(url, data, config);
   }
 
   /**
    * Generic DELETE request
    */
-  async delete<T = any>(url: string, config?: AxiosRequestConfig): Promise<AxiosResponse<T>> {
+  async delete<T = unknown>(url: string, config?: AxiosRequestConfig): Promise<AxiosResponse<T>> {
     return this.client.delete<T>(url, config);
   }
 
@@ -114,7 +114,7 @@ class ExternalApiClient {
   async healthCheck(): Promise<{ status: string; responseTime: number; timestamp: string }> {
     const start = Date.now();
     try {
-      const response = await this.client.get('/health');
+      await this.client.get('/health');
       const responseTime = Date.now() - start;
       
       return {
@@ -122,7 +122,7 @@ class ExternalApiClient {
         responseTime,
         timestamp: new Date().toISOString(),
       };
-    } catch (error) {
+    } catch {
       return {
         status: 'unhealthy',
         responseTime: Date.now() - start,

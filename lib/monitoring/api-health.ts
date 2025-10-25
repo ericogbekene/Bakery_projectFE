@@ -50,7 +50,7 @@ export async function checkExternalApiHealth(): Promise<HealthCheckResult> {
       response_time: responseTime,
       timestamp: new Date().toISOString(),
     };
-  } catch (error) {
+  } catch {
     return {
       status: 'unhealthy',
       external_api: {

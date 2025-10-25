@@ -4,7 +4,7 @@ import { ExternalProduct, ExternalCategory } from '@/lib/types/external-api';
 /**
  * Transform external product data to internal product format
  */
-export function transformExternalProduct(externalProduct: any): Product {
+export function transformExternalProduct(externalProduct: ExternalProduct): Product {
   return {
     id: externalProduct.id.toString(),
     title: externalProduct.name,
@@ -21,7 +21,7 @@ export function transformExternalProduct(externalProduct: any): Product {
 /**
  * Transform external category data to internal category format
  */
-export function transformExternalCategory(externalCategory: any): Category {
+export function transformExternalCategory(externalCategory: ExternalCategory): Category {
   return {
     id: externalCategory.id.toString(),
     name: externalCategory.name,
@@ -94,51 +94,53 @@ export function transformToExternalCategory(category: Category): Partial<Externa
 /**
  * Validate external product data
  */
-export function validateExternalProduct(data: any): data is ExternalProduct {
+export function validateExternalProduct(data: unknown): data is ExternalProduct {
+  const product = data as ExternalProduct;
   return (
-    typeof data === 'object' &&
-    data !== null &&
-    typeof data.id === 'string' &&
-    typeof data.name === 'string' &&
-    typeof data.description === 'string' &&
-    typeof data.image_url === 'string' &&
-    typeof data.price === 'number' &&
-    typeof data.category_id === 'string' &&
-    typeof data.is_active === 'boolean' &&
-    typeof data.created_at === 'string' &&
-    typeof data.updated_at === 'string'
+    typeof product === 'object' &&
+    product !== null &&
+    typeof product.id === 'string' &&
+    typeof product.name === 'string' &&
+    typeof product.description === 'string' &&
+    typeof product.image_url === 'string' &&
+    typeof product.price === 'number' &&
+    typeof product.category_id === 'string' &&
+    typeof product.is_active === 'boolean' &&
+    typeof product.created_at === 'string' &&
+    typeof product.updated_at === 'string'
   );
 }
 
 /**
  * Validate external category data
  */
-export function validateExternalCategory(data: any): data is ExternalCategory {
+export function validateExternalCategory(data: unknown): data is ExternalCategory {
+  const category = data as ExternalCategory;
   return (
-    typeof data === 'object' &&
-    data !== null &&
-    typeof data.id === 'string' &&
-    typeof data.name === 'string' &&
-    typeof data.description === 'string' &&
-    typeof data.slug === 'string' &&
-    typeof data.image_url === 'string' &&
-    typeof data.is_active === 'boolean' &&
-    typeof data.created_at === 'string' &&
-    typeof data.updated_at === 'string'
+    typeof category === 'object' &&
+    category !== null &&
+    typeof category.id === 'string' &&
+    typeof category.name === 'string' &&
+    typeof category.description === 'string' &&
+    typeof category.slug === 'string' &&
+    typeof category.image_url === 'string' &&
+    typeof category.is_active === 'boolean' &&
+    typeof category.created_at === 'string' &&
+    typeof category.updated_at === 'string'
   );
 }
 
 /**
  * Sanitize external data to prevent XSS and other security issues
  */
-export function sanitizeExternalData<T extends Record<string, any>>(data: T): T {
+export function sanitizeExternalData<T extends Record<string, unknown>>(data: T): T {
   const sanitized = { ...data };
   
   // Sanitize string fields
   const stringFields = ['name', 'description', 'title', 'slug'];
   stringFields.forEach(field => {
     if (sanitized[field] && typeof sanitized[field] === 'string') {
-      sanitized[field] = sanitized[field]
+      sanitized[field] = (sanitized[field] as string)
         .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
         .replace(/javascript:/gi, '')
         .trim();

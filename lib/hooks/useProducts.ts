@@ -1,136 +1,129 @@
-import { useState, useEffect, useCallback } from 'react'
-import { ProductWithCategory, ApiResponse } from '@/lib/types/product'
+import { useQuery } from '@tanstack/react-query';
+import { productService, ProductFilters, Product } from '@/lib/services/product-service';
 
-/**
- * Options for the useProducts hook
- */
-interface UseProductsOptions {
-  /** Filter products by category slug */
-  category?: string
-  /** Maximum number of products to fetch */
-  limit?: number
-  /** Number of products to skip (for pagination) */
-  offset?: number
+interface UseProductsOptions extends ProductFilters {
+  enabled?: boolean;
 }
 
-/**
- * Return type for the useProducts hook
- */
 interface UseProductsReturn {
-  /** Array of products with category information */
-  products: ProductWithCategory[]
-  /** Loading state */
-  loading: boolean
-  /** Error message if any */
-  error: string | null
-  /** Function to refetch products */
-  refetch: () => void
+  products: Product[];
+  loading: boolean;
+  error: string | null;
+  refetch: () => void;
+  pagination?: {
+    count: number;
+    next?: string;
+    previous?: string;
+  };
 }
 
 /**
- * Custom React hook for fetching products from the API
- * 
- * Provides loading states, error handling, and automatic refetching.
- * Supports filtering by category and pagination.
- * 
- * @param options - Configuration options for the hook
- * @returns Object containing products, loading state, error, and refetch function
- * 
- * @example
- * ```tsx
- * function ProductList() {
- *   const { products, loading, error } = useProducts({ 
- *     category: 'signature-cakes',
- *     limit: 10 
- *   });
- * 
- *   if (loading) return <div>Loading...</div>;
- *   if (error) return <div>Error: {error}</div>;
- * 
- *   return (
- *     <div>
- *       {products.map(product => (
- *         <ProductCard key={product.id} product={product} />
- *       ))}
- *     </div>
- *   );
- * }
- * ```
+ * Hook for fetching products from external API
  */
 export function useProducts(options: UseProductsOptions = {}): UseProductsReturn {
-  const [products, setProducts] = useState<ProductWithCategory[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const { enabled = true, ...filters } = options;
 
-  const fetchProducts = useCallback(async () => {
-    try {
-      setLoading(true)
-      setError(null)
-
-      const params = new URLSearchParams()
-      if (options.category) params.append('category', options.category)
-      if (options.limit) params.append('limit', options.limit.toString())
-      if (options.offset) params.append('offset', options.offset.toString())
-
-      const response = await fetch(`/api/products?${params.toString()}`)
-      const data: ApiResponse<ProductWithCategory[]> = await response.json()
-
-      if (data.success && data.data) {
-        setProducts(data.data)
-      } else {
-        setError(data.error || 'Failed to fetch products')
-      }
-    } catch (err) {
-      setError('Network error occurred')
-      console.error('Error fetching products:', err)
-    } finally {
-      setLoading(false)
-    }
-  }, [options.category, options.limit, options.offset])
-
-  useEffect(() => {
-    fetchProducts()
-  }, [fetchProducts])
+  const {
+    data,
+    isLoading,
+    error,
+    refetch,
+  } = useQuery({
+    queryKey: ['products', filters],
+    queryFn: () => productService.getProducts(filters),
+    enabled,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 10 * 60 * 1000, // 10 minutes
+  });
 
   return {
-    products,
-    loading,
-    error,
-    refetch: fetchProducts
-  }
+    products: data?.results || [],
+    loading: isLoading,
+    error: error?.message || null,
+    refetch,
+    pagination: data ? {
+      count: data.count,
+      next: data.next,
+      previous: data.previous,
+    } : undefined,
+  };
 }
 
-export function useProduct(id: string) {
-  const [product, setProduct] = useState<ProductWithCategory | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+/**
+ * Hook for fetching a single product
+ */
+export function useProduct(slug: string, enabled: boolean = true) {
+  const {
+    data: product,
+    isLoading,
+    error,
+    refetch,
+  } = useQuery({
+    queryKey: ['product', slug],
+    queryFn: () => productService.getProduct(slug),
+    enabled: enabled && !!slug,
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
+  });
 
-  useEffect(() => {
-    const fetchProduct = async () => {
-      try {
-        setLoading(true)
-        setError(null)
+  return {
+    product,
+    loading: isLoading,
+    error: error?.message || null,
+    refetch,
+  };
+}
 
-        const response = await fetch(`/api/products/${id}`)
-        const data: ApiResponse<ProductWithCategory> = await response.json()
+/**
+ * Hook for searching products
+ */
+export function useProductSearch(query: string, filters: Omit<ProductFilters, 'search'> = {}) {
+  const {
+    data,
+    isLoading,
+    error,
+    refetch,
+  } = useQuery({
+    queryKey: ['product-search', query, filters],
+    queryFn: () => productService.searchProducts(query, filters),
+    enabled: !!query,
+    staleTime: 2 * 60 * 1000, // 2 minutes
+    gcTime: 5 * 60 * 1000, // 5 minutes
+  });
 
-        if (data.success && data.data) {
-          setProduct(data.data)
-        } else {
-          setError(data.error || 'Failed to fetch product')
-        }
-      } catch (err) {
-        setError('Network error occurred')
-        console.error('Error fetching product:', err)
-      } finally {
-        setLoading(false)
-      }
-    }
+  return {
+    products: data?.results || [],
+    loading: isLoading,
+    error: error?.message || null,
+    refetch,
+    pagination: data ? {
+      count: data.count,
+      next: data.next,
+      previous: data.previous,
+    } : undefined,
+  };
+}
 
-    if (id) {
-      fetchProduct()
-    }
-  }, [id])
+/**
+ * Hook for fetching featured products
+ */
+export function useFeaturedProducts() {
+  const {
+    data: products,
+    isLoading,
+    error,
+    refetch,
+  } = useQuery({
+    queryKey: ['featured-products'],
+    queryFn: () => productService.getFeaturedProducts(),
+    staleTime: 10 * 60 * 1000, // 10 minutes
+    gcTime: 30 * 60 * 1000, // 30 minutes
+  });
 
-  return { product, loading, error }
-} 
+  return {
+    products: products || [],
+    loading: isLoading,
+    error: error?.message || null,
+    refetch,
+  };
+}

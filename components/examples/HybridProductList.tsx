@@ -1,6 +1,7 @@
 import React from 'react';
 import { useHybridProducts, useHybridCategories } from '@/lib/hooks/useHybridData';
 import { ProductWithCategory, Category } from '@/lib/types/product';
+import Image from 'next/image';
 
 /**
  * Example component demonstrating hybrid data fetching
@@ -152,9 +153,11 @@ export default function HybridProductList() {
           {products.map((product: ProductWithCategory) => (
             <div key={product.id} className="bg-white rounded-lg shadow-md overflow-hidden">
               <div className="aspect-w-16 aspect-h-9">
-                <img
+                <Image
                   src={product.image}
                   alt={product.title}
+                  width={340}
+                  height={192}
                   className="w-full h-48 object-cover"
                 />
               </div>

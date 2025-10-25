@@ -13,7 +13,8 @@ import axios from "axios";
 
 
 
-export const PASTRIES = [
+
+export const OLD_PASTRIES = [
   {
     image: image1,
     title: "Plain Doughnut",
@@ -93,6 +94,8 @@ const NewPastries = async () => { axios.get("/api/pastries").then((res: { data: 
 });
 }
 
+console.log(NewPastries)
+
 // Define a Product type for type safety
 export type Product = {
   id: string;
@@ -116,5 +119,6 @@ export const fetchProducts = async (): Promise<Product[]> => {
     throw error;
   }
 };
+
 
 export default NewPastries;

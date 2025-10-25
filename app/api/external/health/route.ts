@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import externalApiClient from '@/lib/api/external-client';
 import { externalApiCircuitBreaker } from '@/lib/circuit-breaker';
 
@@ -8,7 +8,7 @@ import { externalApiCircuitBreaker } from '@/lib/circuit-breaker';
  * Health check endpoint for external API connectivity
  * Returns status, response time, and circuit breaker state
  */
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     const startTime = Date.now();
     

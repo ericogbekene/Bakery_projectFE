@@ -138,6 +138,6 @@ export interface ExternalError {
   success: false;
   error: string;
   code: string;
-  details?: any;
+  details?: unknown;
   timestamp: string;
 }
