@@ -4,16 +4,27 @@
  */
 
 export interface ExternalProduct {
-  id: string;
+  id: number;
   name: string;
-  description: string;
+  slug: string;
+  image: string;
+  description?: string; // Not in API response, make optional
   image_url: string;
-  price: number;
-  category: string;
-  category_id: string;
-  is_active: boolean;
+  medium_image_url: string;
+  large_image_url: string;
+  thumbnail_url: string;
+  price: string; // Note: API returns string, not number!
+  available: boolean;
+  category_name: string;
+  stock_quantity: number;
+  is_in_stock: boolean;
+  is_low_stock: boolean;
   created_at: string;
-  updated_at: string;
+  // Optional fields that aren't in the API response
+  category?: string;
+  category_id?: string;
+  is_active?: boolean;
+  updated_at?: string;
   tags?: string[];
   ingredients?: string[];
   allergens?: string[];
@@ -26,7 +37,7 @@ export interface ExternalProduct {
 }
 
 export interface ExternalCategory {
-  id: string;
+  id: number;
   name: string;
   description: string;
   slug: string;

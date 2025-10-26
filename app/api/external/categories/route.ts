@@ -4,6 +4,20 @@ import { transformExternalCategory } from '@/lib/utils/data-transformer';
 import { externalApiCircuitBreaker } from '@/lib/circuit-breaker';
 import { ApiResponse, Category } from '@/lib/types/product';
 
+
+interface CategoryResponse {
+  results: Array<{
+    id: number;
+    name: string;
+    slug: string;
+    description: string;
+    image_url: string;
+    is_active: boolean;
+    created_at: string;
+    updated_at: string;
+    sort_order: number;
+  }>;
+}
 /**
  * GET /api/external/categories
  * 
@@ -28,7 +42,7 @@ export async function GET(request: NextRequest) {
 
     // Fetch categories from external API with circuit breaker protection
     const externalCategories = await externalApiCircuitBreaker.execute(async () => {
-      const response = await externalApiClient.get('/api/products/categories/', {
+      const response = await externalApiClient.get<CategoryResponse>('/api/products/categories/', {
         params: {
           limit: limit ? parseInt(limit) : undefined,
           offset: offset ? parseInt(offset) : undefined,
@@ -37,7 +51,8 @@ export async function GET(request: NextRequest) {
       });
 
       // The external API returns data in a different format
-      if (!response.data.results) {
+     // !response.data?.results
+      if (!response.data?.results) {
         throw new Error('No categories found in external API response');
       }
 

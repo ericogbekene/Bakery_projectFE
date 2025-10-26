@@ -6,8 +6,9 @@ import { useCategories } from '@/lib/hooks/useCategories';
 import { useCart } from '@/lib/hooks/useCart';
 import { useAuth } from '@/lib/hooks/useAuth';
 import { httpClient } from '@/lib/api/http-client';
-import { Product } from '@/lib/services/product-service';
-import { Category } from '@/lib/services/category-service';
+import { Product, ProductListResponse } from '@/lib/services/product-service';
+import { Category, CategoryListResponse } from '@/lib/services/category-service';
+import { Cart } from '@/lib/services/cart-service';
 
 interface TestResult {
   healthCheck?: { status?: string; responseTime?: number; timestamp?: string; error?: string };
@@ -27,7 +28,7 @@ export default function ApiTestComponent() {
   // Test hooks
   const { products, loading: productsLoading, error: productsError } = useProducts({ limit: 5 });
   const { categories, loading: categoriesLoading, error: categoriesError } = useCategories({ limit: 5 });
-  const { cart, loading: cartLoading, error: cartError } = useCart();
+  const { cart, loading: cartLoading } = useCart();
   const { isAuthenticated } = useAuth();
 
   const runApiTests = async () => {
@@ -50,7 +51,7 @@ export default function ApiTestComponent() {
     try {
       // Test 2: Products API
       console.log('Testing Products API...');
-      const productsResponse = await httpClient.get('/products/products/?limit=3');
+      const productsResponse = await httpClient.get<ProductListResponse>('/products/products/?limit=3');
       results.products = {
         success: true,
         count: productsResponse.count || 0,
@@ -63,7 +64,7 @@ export default function ApiTestComponent() {
     try {
       // Test 3: Categories API
       console.log('Testing Categories API...');
-      const categoriesResponse = await httpClient.get('/products/categories/?limit=3');
+      const categoriesResponse = await httpClient.get<CategoryListResponse>('/products/categories/?limit=3');
       results.categories = {
         success: true,
         count: categoriesResponse.count || 0,
@@ -77,7 +78,7 @@ export default function ApiTestComponent() {
       // Test 4: Cart API (if authenticated)
       if (isAuthenticated) {
         console.log('Testing Cart API...');
-        const cartResponse = await httpClient.get('/cart/cart/');
+        const cartResponse = await httpClient.get<Cart>('/cart/cart/');
         results.cart = {
           success: true,
           hasItems: !!cartResponse.cart_items?.length,
@@ -127,7 +128,6 @@ export default function ApiTestComponent() {
         <div className="border p-4 rounded">
           <h3 className="font-semibold mb-2">Cart Hook</h3>
           <p>Loading: {cartLoading ? 'Yes' : 'No'}</p>
-          <p>Error: {cartError || 'None'}</p>
           <p>Items: {cart?.total_items || 0}</p>
         </div>
 
