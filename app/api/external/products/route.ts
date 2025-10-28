@@ -4,6 +4,27 @@ import { transformExternalProduct } from '@/lib/utils/data-transformer';
 import { externalApiCircuitBreaker } from '@/lib/circuit-breaker';
 import { ApiResponse, ProductWithCategory } from '@/lib/types/product';
 
+interface ProductResponse {
+  results: Array<{
+    id: number;
+    name: string;
+    slug: string;
+    image: string;
+    description?: string;
+    image_url: string;
+    medium_image_url: string;
+    large_image_url: string;
+    thumbnail_url: string;
+    price: string; // String, not number!
+    available: boolean;
+    category_name: string;
+    stock_quantity: number;
+    is_in_stock: boolean;
+    is_low_stock: boolean;
+    created_at: string;
+  }>;
+}
+
 /**
  * GET /api/external/products
  * 
@@ -30,7 +51,7 @@ export async function GET(request: NextRequest) {
     // Fetch products from external API with circuit breaker protection
     const externalProducts = await externalApiCircuitBreaker.execute(async () => {
       // Use the correct external API endpoint for products
-      const response = await externalApiClient.get('/api/products/products/', {
+      const response = await externalApiClient.get<ProductResponse>('/api/products/', {
         params: {
           category,
           limit: limit ? parseInt(limit) : undefined,
@@ -40,7 +61,7 @@ export async function GET(request: NextRequest) {
       });
 
       // The external API returns data in a different format
-      if (!response.data.results) {
+      if (!response.data?.results) {
         throw new Error('No products found in external API response');
       }
 
@@ -48,10 +69,8 @@ export async function GET(request: NextRequest) {
     });
 
     // Transform external products to internal format
-
-    //should be externalProducts here 
-    const transformedProducts = externalProducts.map(products => 
-      transformExternalProduct(products ) as ProductWithCategory
+    const transformedProducts = externalProducts.map(product => 
+      transformExternalProduct(product) as ProductWithCategory
     );
 
     const response: ApiResponse<ProductWithCategory[]> = {

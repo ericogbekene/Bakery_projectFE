@@ -140,7 +140,7 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
 
   return (
     <CartContext.Provider value={{
-      cart,
+      cart: cart || null,
       loading: isLoading,
       addToCart,
       removeFromCart,

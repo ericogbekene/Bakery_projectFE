@@ -8,13 +8,13 @@ export function transformExternalProduct(externalProduct: ExternalProduct): Prod
   return {
     id: externalProduct.id.toString(),
     title: externalProduct.name,
-    description: externalProduct.name, // Use name as description if no description field
+    description: externalProduct.description || externalProduct.name, // Use name as fallback
     image: externalProduct.image_url || externalProduct.thumbnail_url,
     price: parseFloat(externalProduct.price) || 0,
-    categoryId: externalProduct.category_name, // Use category name as ID for now
-    isActive: externalProduct.available !== false,
+    categoryId: externalProduct.category_name,
+    isActive: externalProduct.available,
     createdAt: new Date(externalProduct.created_at),
-    updatedAt: new Date(externalProduct.created_at), // Use created_at as updated_at if no updated_at
+    updatedAt: new Date(externalProduct.updated_at || externalProduct.created_at),
   };
 }
 
@@ -73,7 +73,7 @@ export function transformToExternalProduct(product: Product): Partial<ExternalPr
     name: product.title,
     description: product.description,
     image_url: product.image,
-    price: product.price || 0,
+    price: (product.price || 0).toString(),
     is_active: product.isActive,
   };
 }
@@ -134,20 +134,21 @@ export function validateExternalCategory(data: unknown): data is ExternalCategor
  * Sanitize external data to prevent XSS and other security issues
  */
 export function sanitizeExternalData<T extends Record<string, unknown>>(data: T): T {
-  const sanitized = { ...data };
+  const sanitized: Record<string, unknown> = {};
   
-  // Sanitize string fields
-  const stringFields = ['name', 'description', 'title', 'slug'];
-  stringFields.forEach(field => {
-    if (sanitized[field] && typeof sanitized[field] === 'string') {
-      sanitized[field] = (sanitized[field] as string)
-        .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
-        .replace(/javascript:/gi, '')
-        .trim();
+  for (const key in data) {
+    const value = data[key];
+    if (typeof value === 'string' && ['name', 'description', 'title', 'slug'].includes(key)) {
+        sanitized[key] = value
+            .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+            .replace(/javascript:/gi, '')
+            .trim();
+    } else {
+        sanitized[key] = value;
     }
-  });
+  }
   
-  return sanitized;
+  return sanitized as T;
 }
 
 /**
@@ -162,9 +163,9 @@ export function mergeProductData(
     title: externalProduct.name || localProduct.title,
     description: externalProduct.description || localProduct.description,
     image: externalProduct.image_url || localProduct.image,
-    price: externalProduct.price || localProduct.price,
-    isActive: externalProduct.is_active,
-    updatedAt: new Date(externalProduct.updated_at),
+    price: parseFloat(externalProduct.price) || localProduct.price,
+    isActive: externalProduct.is_active ?? localProduct.isActive,
+    updatedAt: new Date(externalProduct.updated_at || localProduct.updatedAt),
   };
 }
 

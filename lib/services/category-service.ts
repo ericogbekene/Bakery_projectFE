@@ -6,6 +6,10 @@ export interface CategoryFilters {
   search?: string;
   hasProducts?: boolean;
   ordering?: string;
+  limit?: number;
+  offset?: number;
+  orderBy?: string;
+  orderDirection?: string;
 }
 
 export interface Category {
@@ -40,7 +44,9 @@ class CategoryService {
       queryParams.append('has_products', filters.hasProducts.toString());
     }
     if (filters.ordering) queryParams.append('ordering', filters.ordering);
-
+    if (filters.limit) queryParams.append('limit', filters.limit.toString()); // ✅ Add this
+    if (filters.offset) queryParams.append('offset', filters.offset.toString()); // ✅ Add this
+  
     const endpoint = `${ENDPOINTS.EXTERNAL.CATEGORIES.LIST}?${queryParams.toString()}`;
     return await httpClient.get<CategoryListResponse>(endpoint);
   }
