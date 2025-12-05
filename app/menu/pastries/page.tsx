@@ -5,14 +5,17 @@ import { poltawskiNowy } from "@/lib/font";
 import { cn } from "@/lib/utils";
 import Image from "next/image";
 import Link from "next/link";
-import { PASTRIES } from ".";
+import { OLD_PASTRIES } from ".";
+
+
+
 
 export default function Page() {
   return (
     <main className="pb-12">
       <MenuHero />
       <Container className="my-8 grid grid-cols-1 gap-8 md:grid-cols-2 lg:my-16 lg:mt-8 lg:grid-cols-3">
-        {PASTRIES.map((item, index) => (
+        {OLD_PASTRIES.map((item, index) => (
           <div key={index} className="shadow-md">
             <div className="bg-primary-300 flex aspect-[380/306] items-center justify-center overflow-hidden rounded-t">
               <Image
@@ -37,7 +40,7 @@ export default function Page() {
                 asChild
               >
                 <Link href={`/menu/pastries/order?title=${item.title}`}>
-                  Order now
+                  Order now 
                 </Link>
               </Button>
             </div>
