@@ -101,7 +101,7 @@ const Header = () => {
           </ul>
         </nav>
         <Button size={"lg"} className="w-40 max-lg:hidden" asChild>
-          <Link href="/custom-order">Order now</Link>
+          <Link href="/register">Register</Link>
         </Button>
         <button
           className="cursor-pointer lg:hidden"
@@ -179,7 +179,7 @@ const Header = () => {
               })}
             </ul>
             <Button size="lg" className="mt-auto w-full" asChild>
-              <Link href="/custom-order">Order now</Link>
+              <Link href="/register">Register</Link>
             </Button>
           </aside>
         </>

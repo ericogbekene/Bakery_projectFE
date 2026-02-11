@@ -9,8 +9,12 @@ import image8 from "@/assets/images/50.webp";
 import image9 from "@/assets/images/51.webp";
 import image10 from "@/assets/images/52.webp";
 import image11 from "@/assets/images/53.webp";
+import axios from "axios";
 
-export const PASTRIES = [
+
+
+
+export const OLD_PASTRIES = [
   {
     image: image1,
     title: "Plain Doughnut",
@@ -67,3 +71,54 @@ export const PASTRIES = [
     desc: "Our fish pie is a golden, flaky pastry filled with creamy, tender fish, vegetables, and savory herbs for a rich, comforting taste.",
   },
 ];
+
+
+// Pastry categories and utilities (commented out for future use)
+// const PASTRIES_CATEGORIES = [
+//   {
+//     title: "Doughnuts",
+//     items: PASTRIES.filter((item) => item.category === "doughnuts"),
+//   },
+// ];
+
+// const getPastry = (category: string) => {
+//   return PASTRIES.filter((item) => item.category === category);
+// };
+
+const NewPastries = async () => { axios.get("/api/pastries").then((res: { data: { categories: string[]; pastries: { category: string }[] } }) => {
+  const data = res.data;
+  const categories = data.categories;
+  const pastries = data.pastries;
+  const newPastries = pastries.filter((item: { category: string }) => !categories.includes(item.category));
+  return newPastries;
+});
+}
+
+console.log(NewPastries)
+
+// Define a Product type for type safety
+export type Product = {
+  id: string;
+  name: string;
+  price: number;
+  description: string;
+  imageUrl: string;
+  // Add more fields as needed based on your backend response
+};
+
+/**
+ * Fetches product information from the backend API.
+ * @returns Promise<Product[]>
+ */
+export const fetchProducts = async (): Promise<Product[]> => {
+  try {
+    const response = await axios.get<{ products: Product[] }>("{Base_Url}/products");
+    return response.data.products;
+  } catch (error) {
+    console.error("Error fetching products:", error);
+    throw error;
+  }
+};
+
+
+export default NewPastries;
