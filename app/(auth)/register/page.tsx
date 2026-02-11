@@ -20,6 +20,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
+import { AxiosError } from "axios";
+//import type { AxiosError } from "axios";
 
 const registerSchema = z.object({
   first_name: z.string().min(2, {
@@ -68,13 +70,14 @@ export default function RegisterPage() {
       alertMessage(data.message, "success");
       form.reset();
     },
-    onError: (error: any) => {
+    onError: (error: AxiosError) => {
       // Check if error has field-specific validation errors
-      if (error?.response?.data && typeof error.response.data === "object") {
-        const errorData = error.response.data;
-        let hasFieldErrors = false;
-
-        // Set field-specific errors
+      const data = error?.response?.data;
+      let hasFieldErrors = false;
+      // If data is an object and not null
+      if (data && typeof data === "object" && !Array.isArray(data)) {
+        // Try to treat as Record<string, string[]>
+        const errorData = data as Record<string, string[]> & { detail?: string };
         Object.keys(errorData).forEach((fieldName) => {
           if (
             fieldName in form.getValues() &&
@@ -82,24 +85,17 @@ export default function RegisterPage() {
           ) {
             form.setError(fieldName as keyof RegisterFormValues, {
               type: "server",
-              message: errorData[fieldName][0], // Take the first error message
+              message: (errorData[fieldName] as string[])[0], // Take the first error message
             });
             hasFieldErrors = true;
           }
         });
-
-        // If no field errors were set, show generic error
         if (!hasFieldErrors) {
-          alertMessage(
-            error?.response?.data?.detail || "An error occurred",
-            "error",
-          );
+          alertMessage(errorData.detail || "An error occurred", "error");
         }
       } else {
-        alertMessage(
-          error?.response?.data?.detail || "An error occurred",
-          "error",
-        );
+        // fallback for unknown error shape
+        alertMessage("An error occurred", "error");
       }
     },
   });

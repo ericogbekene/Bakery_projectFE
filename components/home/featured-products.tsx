@@ -9,7 +9,7 @@ import Image from "next/image";
 import Container from "../shared/container";
 
 const FeaturedProducts = () => {
-  const { data, isPending } = useQueryAction<T.Product[]>({
+  const { data } = useQueryAction<T.Product[]>({
     url: ENDPOINTS.GET_FEATURED_PRODUCTS,
     key: ["products", "featured"],
   });

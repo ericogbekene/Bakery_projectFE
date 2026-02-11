@@ -17,6 +17,7 @@ import useMutationAction from "@/hooks/use-mutation-action";
 import { poltawskiNowy } from "@/lib/font";
 import { cn } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { AxiosError } from "axios";
 import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -50,11 +51,11 @@ export default function LoginPage() {
     onSuccess: (data) => {
       alertMessage(data.message, "success");
     },
-    onError: (error: any) => {
-      alertMessage(
-        error?.response?.data?.detail || "An error occurred",
-        "error",
-      );
+    onError: (error: AxiosError) => {
+      const errorMessage =
+        (error.response?.data as { detail?: string })?.detail ||
+        "An error occurred";
+      alertMessage(errorMessage, "error");
     },
   });
 
