@@ -1,42 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { prisma } from '@/lib/db/prisma'
-import { ApiResponse, Category } from '@/lib/types/product'
-
-export async function GET(request: NextRequest) {
-  try {
-    const { searchParams } = new URL(request.url)
-    const includeProducts = searchParams.get('includeProducts') === 'true'
-
-    const categories = await prisma.category.findMany({
-      include: includeProducts ? {
-        products: {
-          where: { isActive: true },
-          orderBy: { createdAt: 'desc' }
-        }
-      } : undefined,
-      orderBy: {
-        name: 'asc'
-      }
-    })
-
-    const response: ApiResponse<Category[]> = {
-      success: true,
-      data: categories as Category[],
-      message: `Found ${categories.length} categories`
-    }
-
-    return NextResponse.json(response)
-  } catch (error) {
-    console.error('Error fetching categories:', error)
-    
-    const response: ApiResponse<null> = {
-      success: false,
-      error: 'Failed to fetch categories'
-    }
-
-    return NextResponse.json(response, { status: 500 })
-  }
-}
+// Internal API removed. Only external API is used.
 
 export async function POST(request: NextRequest) {
   try {
