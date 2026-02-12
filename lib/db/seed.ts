@@ -1,43 +1,4 @@
-import { prisma } from './prisma'
-
-// Define product data directly to avoid image import issues
-const SIGNATURE_CAKES = [
-  {
-    image: '/assets/images/5.webp',
-    title: "Butterfly",
-    desc: "'Butterfly' is a 2 layered buttercream covered cake inspired by the wave of the sea and the freedom of birds.",
-  },
-  {
-    image: '/assets/images/36.webp',
-    title: "Flower Adorned",
-    desc: "'Flower Adorned' is a 4 layered buttercream covered cake, dressed to fade two colours together seamlessly.",
-  },
-  {
-    image: '/assets/images/4.webp',
-    title: "Russian Tip",
-    desc: "'Russian Tip' is a 4 layered buttercream covered cake, decorating the top with Russian tip piping nozzle to create simple yet elegant flowers.",
-  },
-  {
-    image: '/assets/images/37.webp',
-    title: "Slant",
-    desc: "'Slant' is a 4 layered buttercream covered cake, decorating with gold leaf and shredded coconut.",
-  },
-]
-
-const WEDDING_CAKES = [
-  {
-    image: '/assets/images/33.webp',
-    title: "Harmony",
-    desc: "'Harmony' is a beautifully buttercream covered cake highlighted with Pearls."
-  },
-  {
-    image: '/assets/images/7.webp',
-    title: "Flowery",
-    desc: "'Flowery' is a fondant covered cake adorned with several flowers."
-  },
-  {
-    image: '/assets/images/40.webp',
-    title: "Angel",
+// Seed file removed. Only external API is used.
     desc: "'Angel' a fondant covered two tier wedding cake."
   },
   {

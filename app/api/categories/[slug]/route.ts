@@ -1,43 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { prisma } from '@/lib/db/prisma'
-import { ApiResponse, CategoryWithProducts, Category } from '@/lib/types/product'
-
-export async function GET(
-  request: NextRequest,
-  { params }: { params: Promise<{ slug: string }> }
-) {
-  try {
-    const { searchParams } = new URL(request.url)
-    const includeProducts = searchParams.get('includeProducts') !== 'false'
-    const { slug } = await params
-
-    const category = await prisma.category.findUnique({
-      where: {
-        slug: slug
-      },
-      include: includeProducts ? {
-        products: {
-          where: { isActive: true },
-          orderBy: { createdAt: 'desc' }
-        }
-      } : undefined
-    })
-
-    if (!category) {
-      const response: ApiResponse<null> = {
-        success: false,
-        error: 'Category not found'
-      }
-      return NextResponse.json(response, { status: 404 })
-    }
-
-    const response: ApiResponse<CategoryWithProducts> = {
-      success: true,
-      data: category as CategoryWithProducts
-    }
-
-    return NextResponse.json(response)
-  } catch (error) {
+// Internal API removed. Only external API is used.
     console.error('Error fetching category:', error)
     
     const response: ApiResponse<null> = {
