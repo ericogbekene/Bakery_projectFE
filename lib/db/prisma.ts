@@ -1,1 +1,0 @@
-// Prisma client removed. Only external API is used.
