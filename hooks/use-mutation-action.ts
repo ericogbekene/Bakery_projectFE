@@ -1,8 +1,10 @@
 import {
   type UseMutationOptions,
+  type Mutation,
   useMutation,
   useQueryClient,
 } from "@tanstack/react-query";
+
 import { AxiosError, type AxiosResponse } from "axios";
 import { useCallback, useMemo } from "react";
 import api from "../lib/axios";
@@ -51,6 +53,7 @@ function useMutationAction<TData = unknown, TVariables = unknown>({
         data: TData,
         variables: TVariables,
         context: unknown,
+        mutation: Parameters<NonNullable<UseMutationOptions<TData, AxiosError, TVariables>["onSuccess"]>>[3],
       ) => {
         if (invalidateQueries.length > 0) {
           await Promise.all(
@@ -59,11 +62,15 @@ function useMutationAction<TData = unknown, TVariables = unknown>({
             ),
           );
         }
+        // Call the provided onSuccess callback if it exists
+        if (onSuccess) {
+          onSuccess(data, variables, context, mutation);
+        }
 
-        onSuccess?.(data, variables, context);
+        //onSuccess?.(data, variables, context);
       },
-      onError: (error: AxiosError, variables: TVariables, context: unknown) => {
-        onError?.(error, variables, context);
+      onError: (error: AxiosError, variables: TVariables, context: unknown, mutation: Parameters<NonNullable<UseMutationOptions<TData, AxiosError, TVariables>["onError"]>>[3],) => {
+        onError?.(error, variables, context, mutation);
       },
       ...options,
     }),
@@ -78,12 +85,12 @@ function useMutationAction<TData = unknown, TVariables = unknown>({
 
 export type MutationResult<TData> =
   | {
-      data: TData;
-      error: null;
-    }
+    data: TData;
+    error: null;
+  }
   | {
-      data: null;
-      error: AxiosError;
-    };
+    data: null;
+    error: AxiosError;
+  };
 
 export default useMutationAction;
