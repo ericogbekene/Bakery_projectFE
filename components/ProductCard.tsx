@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Product } from "@/lib/services/product-service";
@@ -25,9 +26,11 @@ export default function ProductCard({ product }: ProductCardProps) {
   return (
     <div className={cn("border rounded-lg p-4 flex flex-col")}>      
       <Link href={`/products/${product.slug}`}>        
-        <img
+        <Image
           src={product.image_url || "/assets/images/placeholder.png"}
           alt={product.name}
+          width={200}
+          height={200}
           className="w-full h-48 object-cover mb-4 rounded"
         />
       </Link>

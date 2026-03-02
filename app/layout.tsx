@@ -2,6 +2,7 @@ import Footer from "@/components/layout/footer";
 import Header from "@/components/layout/header";
 import QueryProvider from "@/components/providers/query-provider";
 import NotistackProvider from "@/components/providers/snackbar-provider";
+import CartProviderWrapper from "@/components/providers/cart-provider";
 import type { Metadata } from "next";
 import { Open_Sans } from "next/font/google";
 import NextTopLoader from "nextjs-toploader";
@@ -26,11 +27,13 @@ export default function RootLayout({
       <body className={`${openSans.className} text-text antialiased`}>
         <NextTopLoader showSpinner={false} color="#c85387" />
         <QueryProvider>
-          <NotistackProvider>
-            <Header />
-            {children}
-            <Footer />
-          </NotistackProvider>
+          <CartProviderWrapper>
+            <NotistackProvider>
+              <Header />
+              {children}
+              <Footer />
+            </NotistackProvider>
+          </CartProviderWrapper>
         </QueryProvider>
       </body>
     </html>
