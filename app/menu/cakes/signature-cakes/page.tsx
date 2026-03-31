@@ -11,8 +11,10 @@ import Link from "next/link";
 
 export default function SignatureCakesPage() {
   const { products, loading, error } = useProducts({
-    category: "signature-cakes",
+    //category: "1",  Assuming "1" is the category ID for signature cakes
+    product_type: "cake", // Assuming this is the correct filter for signature cakes  
   });
+  console.log("Products:", products);
   if (loading) {
     return (
       <main className="pb-12">
@@ -51,6 +53,7 @@ export default function SignatureCakesPage() {
     <main className="pb-12">
       <MenuHero />
       <Container className="my-8 grid grid-cols-1 gap-8 md:grid-cols-2 lg:my-16 lg:mt-8 lg:grid-cols-3">
+        
         {products.map((product) => (
           <div key={product.id} className="shadow-md">
             <div className="bg-primary-300 flex aspect-[380/306] items-center justify-center overflow-hidden rounded-t">

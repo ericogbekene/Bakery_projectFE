@@ -10,6 +10,7 @@ export interface ProductFilters {
   ordering?: string;
   page?: number;
   limit?: number;
+  product_type?: string;
 }
 
 export interface Product {
@@ -37,10 +38,34 @@ export interface ProductListResponse {
   results: Product[];
 }
 
+interface RawProductListResponse {
+  count: number;
+  next?: string;
+  previous?: string;
+  results?: Product[] | {
+    products?: Product[];
+  };
+}
+
 /**
  * Product service for M&C Cakes API
  */
 class ProductService {
+  private normalizeProductListResponse(response: RawProductListResponse): ProductListResponse {
+    const results = Array.isArray(response.results)
+      ? response.results
+      : Array.isArray(response.results?.products)
+        ? response.results.products
+        : [];
+
+    return {
+      count: response.count ?? 0,
+      next: response.next,
+      previous: response.previous,
+      results,
+    };
+  }
+
   /**
    * Get all products with filtering and pagination
    */
@@ -49,16 +74,19 @@ class ProductService {
     
     // Apply filters
     if (filters.search) queryParams.append('search', filters.search);
-    if (filters.category) queryParams.append('category_slug', filters.category);
+    if (filters.category) queryParams.append('category', filters.category);
     if (filters.minPrice) queryParams.append('min_price', filters.minPrice.toString());
     if (filters.maxPrice) queryParams.append('max_price', filters.maxPrice.toString());
     if (filters.inStock !== undefined) queryParams.append('in_stock', filters.inStock.toString());
     if (filters.ordering) queryParams.append('ordering', filters.ordering);
     if (filters.page) queryParams.append('page', filters.page.toString());
     if (filters.limit) queryParams.append('limit', filters.limit.toString());
+    if (filters.product_type) queryParams.append('product_type', filters.product_type);
 
     const endpoint = `${ENDPOINTS.EXTERNAL.PRODUCTS.LIST}?${queryParams.toString()}`;
-    return await httpClient.get<ProductListResponse>(endpoint);
+    const response = await httpClient.get<RawProductListResponse>(endpoint);
+
+    return this.normalizeProductListResponse(response);
   }
 
   /**
@@ -74,13 +102,15 @@ class ProductService {
   async searchProducts(query: string, filters: Omit<ProductFilters, 'search'> = {}): Promise<ProductListResponse> {
     const queryParams = new URLSearchParams({ q: query });
     
-    if (filters.category) queryParams.append('category_slug', filters.category);
+    if (filters.category) queryParams.append('category', filters.category);
     if (filters.minPrice) queryParams.append('min_price', filters.minPrice.toString());
     if (filters.maxPrice) queryParams.append('max_price', filters.maxPrice.toString());
     if (filters.inStock !== undefined) queryParams.append('in_stock', filters.inStock.toString());
 
     const endpoint = `${ENDPOINTS.EXTERNAL.PRODUCTS.SEARCH}?${queryParams.toString()}`;
-    return await httpClient.get<ProductListResponse>(endpoint);
+    const response = await httpClient.get<RawProductListResponse>(endpoint);
+
+    return this.normalizeProductListResponse(response);
   }
 
   /**

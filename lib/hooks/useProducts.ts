@@ -37,7 +37,11 @@ export function useProducts(options: UseProductsOptions = {}): UseProductsReturn
   });
 
   return {
-    products: data?.results || [],
+    products: Array.isArray(data?.results)
+      ? data!.results
+      : Array.isArray(data)
+        ? (data as unknown as Product[])
+        : [],
     loading: isLoading,
     error: error?.message || null,
     refetch,

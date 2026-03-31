@@ -11,7 +11,9 @@ export default function CartItems() {
     return <p>Loading cart...</p>;
   }
 
-  if (!cart || cart.cart_items.length === 0) {
+  // Safe check with fallback to empty array
+  const cartItems = cart?.cart_items ?? [];
+  if (!cart || cartItems.length === 0) {
     return (
       <div>
         <p className="mb-4">Your cart is empty.</p>
