@@ -1,107 +1,186 @@
-import { httpClient } from '@/lib/api/http-client';
-import ENDPOINTS from '@/constants/endpoints';
+import ENDPOINTS from "@/constants/endpoints";
+import { httpClient } from "@/lib/api/http-client";
 
 export interface ProductFilters {
   search?: string;
-  category?: string;
-  minPrice?: number;
-  maxPrice?: number;
-  inStock?: boolean;
+  category?: string; // category ID (integer) — NOT slug
+  product_type?: "cake" | "pastry";
   ordering?: string;
   page?: number;
-  limit?: number;
+  page_size?: number;
 }
 
 export interface Product {
   id: number;
   name: string;
   slug: string;
-  image_url?: string;
-  thumbnail_url?: string;
-  medium_image_url?: string;
-  large_image_url?: string;
+  product_type: "cake" | "pastry";
+  product_type_display: string;
+  image_url: string | null;
+  thumbnail_url: string | null;
+  medium_image_url: string | null;
+  large_image_url: string | null;
   price: string;
-  available: boolean;
-  category_name: string;
-  stock_quantity: number;
-  is_in_stock: boolean;
-  is_low_stock: boolean;
-  track_inventory: boolean;
+  available: boolean; // NOTE: Django field is `available`, NOT `isActive`
+  category_name: string | null;
   created_at: string;
+  // Cake-specific (null for pastries)
+  layers: number | null;
+  covering: string | null;
+  preparation_days: number | null;
 }
 
 export interface ProductListResponse {
   count: number;
-  next?: string;
-  previous?: string;
+  next: string | null;
+  previous: string | null;
+  total_pages: number;
+  current_page: number;
+  page_size: number;
   results: Product[];
 }
 
+export interface Category {
+  id: number;
+  name: string;
+  slug: string;
+  product_count: number;
+}
+
+export interface CategoryListResponse {
+  count: number;
+  next: string | null;
+  previous: string | null;
+  results: Category[];
+}
+
+export interface ProductCounts {
+  cakes: number;
+  pastries: number;
+  total: number;
+}
+
 /**
- * Product service for M&C Cakes API
+ * Product service for MC Cakes Django API
  */
 class ProductService {
   /**
-   * Get all products with filtering and pagination
+   * Get all products with filtering and pagination.
+   *
+   * FIX 1: Removed `category_slug` param — Django filters by `category` (integer ID).
+   * FIX 2: Removed `min_price`, `max_price`, `inStock`, `limit` — these params
+   *         don't exist on the Django backend and were silently ignored.
+   * FIX 3: Use `page_size` not `limit` for page size control.
+   * FIX 4: Use `search` not `q` for text search.
    */
-  async getProducts(filters: ProductFilters = {}): Promise<ProductListResponse> {
+  async getProducts(
+    filters: ProductFilters = {},
+  ): Promise<ProductListResponse> {
     const queryParams = new URLSearchParams();
-    
-    // Apply filters
-    if (filters.search) queryParams.append('search', filters.search);
-    if (filters.category) queryParams.append('category_slug', filters.category);
-    if (filters.minPrice) queryParams.append('min_price', filters.minPrice.toString());
-    if (filters.maxPrice) queryParams.append('max_price', filters.maxPrice.toString());
-    if (filters.inStock !== undefined) queryParams.append('in_stock', filters.inStock.toString());
-    if (filters.ordering) queryParams.append('ordering', filters.ordering);
-    if (filters.page) queryParams.append('page', filters.page.toString());
-    if (filters.limit) queryParams.append('limit', filters.limit.toString());
 
-    const endpoint = `${ENDPOINTS.EXTERNAL.PRODUCTS.LIST}?${queryParams.toString()}`;
+    if (filters.search) queryParams.append("search", filters.search);
+    if (filters.category) queryParams.append("category", filters.category);
+    if (filters.product_type)
+      queryParams.append("product_type", filters.product_type);
+    if (filters.ordering) queryParams.append("ordering", filters.ordering);
+    if (filters.page) queryParams.append("page", filters.page.toString());
+    if (filters.page_size)
+      queryParams.append("page_size", filters.page_size.toString());
+
+    const qs = queryParams.toString();
+    const endpoint = qs
+      ? `${ENDPOINTS.EXTERNAL.PRODUCTS.LIST}?${qs}`
+      : ENDPOINTS.EXTERNAL.PRODUCTS.LIST;
+
     return await httpClient.get<ProductListResponse>(endpoint);
   }
 
   /**
-   * Get single product by slug
+   * Get all cakes only.
+   */
+  async getCakes(page = 1): Promise<ProductListResponse> {
+    return await httpClient.get<ProductListResponse>(
+      `${ENDPOINTS.EXTERNAL.PRODUCTS.CAKES}?page=${page}`,
+    );
+  }
+
+  /**
+   * Get all pastries only.
+   */
+  async getPastries(page = 1): Promise<ProductListResponse> {
+    return await httpClient.get<ProductListResponse>(
+      `${ENDPOINTS.EXTERNAL.PRODUCTS.PASTRIES}?page=${page}`,
+    );
+  }
+
+  /**
+   * Get single product by slug.
    */
   async getProduct(slug: string): Promise<Product> {
-    return await httpClient.get<Product>(`${ENDPOINTS.EXTERNAL.PRODUCTS.DETAIL}${slug}/`);
+    return await httpClient.get<Product>(
+      `${ENDPOINTS.EXTERNAL.PRODUCTS.DETAIL}${slug}/`,
+    );
   }
 
   /**
-   * Search products
+   * Get cake customization options (sizes, flavors, add-ons).
    */
-  async searchProducts(query: string, filters: Omit<ProductFilters, 'search'> = {}): Promise<ProductListResponse> {
-    const queryParams = new URLSearchParams({ q: query });
-    
-    if (filters.category) queryParams.append('category_slug', filters.category);
-    if (filters.minPrice) queryParams.append('min_price', filters.minPrice.toString());
-    if (filters.maxPrice) queryParams.append('max_price', filters.maxPrice.toString());
-    if (filters.inStock !== undefined) queryParams.append('in_stock', filters.inStock.toString());
-
-    const endpoint = `${ENDPOINTS.EXTERNAL.PRODUCTS.SEARCH}?${queryParams.toString()}`;
-    return await httpClient.get<ProductListResponse>(endpoint);
+  async getCakeCustomization(
+    slug: string,
+  ): Promise<Product & { customization_options: unknown }> {
+    return await httpClient.get(
+      `${ENDPOINTS.EXTERNAL.PRODUCTS.DETAIL}${slug}/customize/`,
+    );
   }
 
   /**
-   * Get featured products
+   * Search products by name or description.
+   *
+   * FIX: Changed `q` to `search` — DRF SearchFilter uses ?search= not ?q=
+   * FIX: Removed `category_slug` — Django uses `category` (integer ID)
    */
-  async getFeaturedProducts(): Promise<Product[]> {
-    return await httpClient.get<Product[]>(ENDPOINTS.EXTERNAL.PRODUCTS.FEATURED);
+  async searchProducts(
+    query: string,
+    filters: Pick<ProductFilters, "category" | "product_type"> = {},
+  ): Promise<ProductListResponse> {
+    const queryParams = new URLSearchParams({ search: query });
+
+    if (filters.category) queryParams.append("category", filters.category);
+    if (filters.product_type)
+      queryParams.append("product_type", filters.product_type);
+
+    return await httpClient.get<ProductListResponse>(
+      `${ENDPOINTS.EXTERNAL.PRODUCTS.SEARCH}?${queryParams.toString()}`,
+    );
   }
 
   /**
-   * Get related products
+   * Get product counts by type.
    */
-  async getRelatedProducts(slug: string): Promise<Product[]> {
-    return await httpClient.get<Product[]>(`${ENDPOINTS.EXTERNAL.PRODUCTS.DETAIL}${slug}/related/`);
+  async getProductCounts(): Promise<ProductCounts> {
+    return await httpClient.get<ProductCounts>(
+      ENDPOINTS.EXTERNAL.PRODUCTS.COUNTS,
+    );
   }
 
   /**
-   * Get low stock products (admin only)
+   * Get all categories with product counts.
    */
-  async getLowStockProducts(): Promise<Product[]> {
-    return await httpClient.get<Product[]>(ENDPOINTS.EXTERNAL.PRODUCTS.LOW_STOCK);
+  async getCategories(): Promise<CategoryListResponse> {
+    return await httpClient.get<CategoryListResponse>(
+      ENDPOINTS.EXTERNAL.PRODUCTS.CATEGORIES,
+    );
+  }
+
+  /**
+   * Get a single category by slug, including its products.
+   */
+  async getCategoryBySlug(
+    slug: string,
+  ): Promise<Category & { products: Product[] }> {
+    return await httpClient.get(
+      `${ENDPOINTS.EXTERNAL.PRODUCTS.CATEGORIES}${slug}/`,
+    );
   }
 }
 
