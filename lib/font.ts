@@ -1,7 +1,4 @@
-import { Poltawski_Nowy } from "next/font/google";
-
-export const poltawskiNowy = Poltawski_Nowy({
-  weight: ["400", "700"],
-  subsets: ["latin"],
-  variable: "--font-poltawski",
-});
+// Local font fallbacks — no Google Fonts network request
+export const poltawskiNowy = {
+  className: "font-serif",
+};

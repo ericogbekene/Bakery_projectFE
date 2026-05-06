@@ -7,9 +7,8 @@ import { Open_Sans } from "next/font/google";
 import NextTopLoader from "nextjs-toploader";
 import "./globals.css";
 
-const openSans = Open_Sans({
-  subsets: ["latin"],
-});
+// Using system font stack — no network request needed
+const openSans = { className: 'font-sans' };
 
 export const metadata: Metadata = {
   title: "Create Next App",

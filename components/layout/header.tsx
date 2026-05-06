@@ -15,6 +15,7 @@ import {
   HoverCardContent,
   HoverCardTrigger,
 } from "../ui/hover-card";
+import CartLink from "./CartLink";
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -35,9 +36,20 @@ const Header = () => {
             height={100}
           />
         </Link>
+
+        {/* Desktop Nav */}
         <nav className="hidden items-center justify-center lg:flex">
           <ul className="flex items-center space-x-8">
             {NAVLINKS.map((link) => {
+              // Render CartLink with badge instead of plain link
+              if (link.href === "/cart") {
+                return (
+                  <li key={link.href}>
+                    <CartLink />
+                  </li>
+                );
+              }
+
               if (link.isPopover) {
                 return (
                   <li key={link.href}>
@@ -100,9 +112,11 @@ const Header = () => {
             })}
           </ul>
         </nav>
+
         <Button size={"lg"} className="w-40 max-lg:hidden" asChild>
           <Link href="/register">Register</Link>
         </Button>
+
         <button
           className="cursor-pointer lg:hidden"
           onClick={() => setIsMenuOpen(true)}
@@ -110,6 +124,8 @@ const Header = () => {
           <MenuIcon className="text-primary h-8 w-10" />
         </button>
       </Container>
+
+      {/* Mobile Menu */}
       {isMenuOpen && (
         <>
           <div
@@ -126,6 +142,15 @@ const Header = () => {
             </button>
             <ul className="flex flex-col space-y-4">
               {NAVLINKS.map((link) => {
+                // Cart with badge in mobile menu too
+                if (link.href === "/cart") {
+                  return (
+                    <li key={link.href}>
+                      <CartLink onClick={() => setIsMenuOpen(false)} />
+                    </li>
+                  );
+                }
+
                 if (link.isPopover) {
                   return (
                     <li key={link.href}>
@@ -158,6 +183,7 @@ const Header = () => {
                     </li>
                   );
                 }
+
                 return (
                   <li key={link.href}>
                     <Link

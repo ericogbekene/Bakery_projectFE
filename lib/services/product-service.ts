@@ -21,15 +21,15 @@ export interface Product {
   medium_image_url: string | null;
   large_image_url: string | null;
   price: string;
-  available: boolean; // NOTE: Django field is `available`, NOT `isActive`
+  available: boolean;
   category_name: string | null;
   created_at: string;
-  // Cake-specific (null for pastries)
   layers: number | null;
   covering: string | null;
   preparation_days: number | null;
+  description: string | null; // ← ADD THIS LINE
+  inspiration: string | null; // ← ADD THIS TOO (used in cake detail)
 }
-
 export interface ProductListResponse {
   count: number;
   next: string | null;
