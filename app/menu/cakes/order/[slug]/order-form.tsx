@@ -19,6 +19,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { cartService } from "@/lib/services/cart-service";
 import { cn } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useQueryClient } from "@tanstack/react-query";
 import { useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -90,11 +91,9 @@ function CheckboxItem({
   );
 }
 
-interface OrderFormProps {
-  productId: number;
-}
+const OrderForm = ({ productId }: { productId: number }) => {
+  const queryClient = useQueryClient();
 
-const OrderForm = ({ productId }: OrderFormProps) => {
   const form = useForm<FormType>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -112,57 +111,62 @@ const OrderForm = ({ productId }: OrderFormProps) => {
   const watchExtras = form.watch("extras");
   const watchSize = form.watch("size");
 
-  const extrasPrice = useMemo(() => {
-    return Object.entries(watchExtras).reduce((sum, [key, qty]) => {
-      const extra = EXTRAS.find((e) => e.name === key);
-      return sum + (extra ? extra.price * qty : 0);
-    }, 0);
-  }, [watchExtras]);
+  const extrasPrice = useMemo(
+    () =>
+      Object.entries(watchExtras).reduce((sum, [key, qty]) => {
+        const extra = EXTRAS.find((e) => e.name === key);
+        return sum + (extra ? extra.price * qty : 0);
+      }, 0),
+    [watchExtras],
+  );
 
   const basePrice = useMemo(() => {
     switch (watchSize) {
-      case "6 inches":  return 10000;
-      case "8 inches":  return 15000;
-      case "10 inches": return 20000;
-      case "12 inches": return 25000;
-      case "14 inches": return 30000;
-      default:          return 0;
+      case "6 inches":
+        return 10000;
+      case "8 inches":
+        return 15000;
+      case "10 inches":
+        return 20000;
+      case "12 inches":
+        return 25000;
+      case "14 inches":
+        return 30000;
+      default:
+        return 0;
     }
   }, [watchSize]);
 
   async function handleSubmit(data: FormType) {
-    const payload = {
-      product_id:       productId,
-      quantity:         1,
-      flavour_1:        data.flavour[0] ?? "",
-      flavour_2:        data.flavour[1] ?? "",
-      size:             SIZE_TO_DJANGO[data.size] ?? data.size,
-      colours:          data.colours.join(", "),
-      cake_topper:      data.extras["Cake topper"]   ?? 0,
-      candle:           data.extras["Candle"]         ?? 0,
-      birthday_card:    data.extras["Birthday card"]  ?? 0,
-      chocolate:        data.extras["Chocolate"]      ?? 0,
-      wine:             data.extras["Wine"]            ?? 0,
-      whiskey_200ml:    data.extras["200ml whiskey"]  ?? 0,
-      additional_notes: data.notes ?? "",
-    };
-
     try {
-      await cartService.addToCart(payload);
+      await cartService.addToCart({
+        product_id: productId,
+        quantity: 1,
+        flavour_1: data.flavour[0] ?? "",
+        flavour_2: data.flavour[1] ?? "",
+        size: SIZE_TO_DJANGO[data.size] ?? data.size,
+        colours: data.colours.join(", "),
+        cake_topper: data.extras["Cake topper"] ?? 0,
+        candle: data.extras["Candle"] ?? 0,
+        birthday_card: data.extras["Birthday card"] ?? 0,
+        chocolate: data.extras["Chocolate"] ?? 0,
+        wine: data.extras["Wine"] ?? 0,
+        whiskey_200ml: data.extras["200ml whiskey"] ?? 0,
+        additional_notes: data.notes ?? "",
+      });
+      // FIX: invalidate both so badge and cart page update without refresh
+      queryClient.invalidateQueries({ queryKey: ["cart"] });
+      queryClient.invalidateQueries({ queryKey: ["cart-count"] });
       alert("Added to cart!");
       form.reset();
     } catch (error: unknown) {
-      const message =
-        error instanceof Error ? error.message : "Failed to add to cart";
-      alert(message);
+      alert(error instanceof Error ? error.message : "Failed to add to cart");
     }
   }
 
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
-
-        {/* Flavour */}
         <FormField
           control={form.control}
           name="flavour"
@@ -189,10 +193,11 @@ const OrderForm = ({ productId }: OrderFormProps) => {
                       selected={field.value.includes(fl)}
                       onToggle={() => {
                         const exists = field.value.includes(fl);
-                        const next = exists
-                          ? field.value.filter((v) => v !== fl)
-                          : [...field.value, fl].slice(-2);
-                        field.onChange(next);
+                        field.onChange(
+                          exists
+                            ? field.value.filter((v) => v !== fl)
+                            : [...field.value, fl].slice(-2),
+                        );
                       }}
                     />
                   ))}
@@ -203,7 +208,6 @@ const OrderForm = ({ productId }: OrderFormProps) => {
           )}
         />
 
-        {/* Size */}
         <FormField
           control={form.control}
           name="size"
@@ -240,7 +244,6 @@ const OrderForm = ({ productId }: OrderFormProps) => {
           )}
         />
 
-        {/* Colours */}
         <FormField
           control={form.control}
           name="colours"
@@ -267,10 +270,11 @@ const OrderForm = ({ productId }: OrderFormProps) => {
                       selected={field.value.includes(col)}
                       onToggle={() => {
                         const exists = field.value.includes(col);
-                        const next = exists
-                          ? field.value.filter((v) => v !== col)
-                          : [...field.value, col].slice(-2);
-                        field.onChange(next);
+                        field.onChange(
+                          exists
+                            ? field.value.filter((v) => v !== col)
+                            : [...field.value, col].slice(-2),
+                        );
                       }}
                     />
                   ))}
@@ -281,7 +285,6 @@ const OrderForm = ({ productId }: OrderFormProps) => {
           )}
         />
 
-        {/* Extras */}
         <div className="grid grid-cols-1 gap-x-4 gap-y-6 lg:grid-cols-2">
           {EXTRAS.map((extra) => (
             <FormField
@@ -298,8 +301,8 @@ const OrderForm = ({ productId }: OrderFormProps) => {
                         {...field}
                         value={field.value || ""}
                         onChange={(e) => {
-                          const value = parseInt(e.target.value, 10);
-                          field.onChange(isNaN(value) ? 0 : value);
+                          const v = parseInt(e.target.value, 10);
+                          field.onChange(isNaN(v) ? 0 : v);
                         }}
                         placeholder={`₦${extra.price.toLocaleString()} per piece`}
                         className="text-foreground"
@@ -333,7 +336,6 @@ const OrderForm = ({ productId }: OrderFormProps) => {
           ))}
         </div>
 
-        {/* Notes */}
         <FormField
           control={form.control}
           name="notes"
@@ -371,7 +373,6 @@ const OrderForm = ({ productId }: OrderFormProps) => {
             </Button>
           </div>
         </div>
-
       </form>
     </Form>
   );

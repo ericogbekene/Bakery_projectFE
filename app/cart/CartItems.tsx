@@ -7,18 +7,20 @@ import { cn } from "@/lib/utils";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import Image from "next/image";
 
-// Single cart item row
+// Helper to invalidate all cart-related queries at once
+const invalidateCart = (queryClient: ReturnType<typeof useQueryClient>) => {
+  queryClient.invalidateQueries({ queryKey: ["cart"] });
+  queryClient.invalidateQueries({ queryKey: ["cart-count"] });
+};
+
 const CartItemRow = ({ item }: { item: CartItem }) => {
   const queryClient = useQueryClient();
 
   const removeMutation = useMutation({
     mutationFn: () => cartService.removeCartItem(item.id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["cart"] });
-    },
+    onSuccess: () => invalidateCart(queryClient), // FIX: was only invalidating ["cart"]
   });
 
-  // Build specs list from item data
   const specs = [
     item.size && { label: "Size", value: `${item.size} inches` },
     item.flavour_1 && {
@@ -46,7 +48,6 @@ const CartItemRow = ({ item }: { item: CartItem }) => {
 
   return (
     <div className="flex flex-col gap-4 sm:flex-row sm:gap-6">
-      {/* Product Image */}
       <div className="shrink-0">
         <div className="bg-primary-100 flex h-40 w-40 items-center justify-center overflow-hidden rounded-2xl sm:h-48 sm:w-48 lg:h-56 lg:w-56">
           {item.product.thumbnail_url ? (
@@ -65,7 +66,6 @@ const CartItemRow = ({ item }: { item: CartItem }) => {
         </div>
       </div>
 
-      {/* Product Details */}
       <div className="flex-1">
         <h3
           className={cn(
@@ -76,7 +76,6 @@ const CartItemRow = ({ item }: { item: CartItem }) => {
           {item.product.name}
         </h3>
 
-        {/* Specs */}
         <ul className="mt-2 flex flex-wrap gap-x-6 gap-y-1 text-sm md:text-base">
           {specs.map((s, idx) => (
             <li key={`${s.label}-${idx}`} className="whitespace-nowrap">
@@ -85,7 +84,6 @@ const CartItemRow = ({ item }: { item: CartItem }) => {
           ))}
         </ul>
 
-        {/* Pricing */}
         <div className="mt-3 space-y-1 text-sm text-gray-600">
           <p>Qty: {item.quantity}</p>
           <p className="font-semibold text-gray-900">
@@ -98,7 +96,6 @@ const CartItemRow = ({ item }: { item: CartItem }) => {
           )}
         </div>
 
-        {/* Remove Button */}
         <div className="mt-4">
           <Button
             variant="outline"
@@ -115,7 +112,6 @@ const CartItemRow = ({ item }: { item: CartItem }) => {
   );
 };
 
-// Cart items list
 const CartItems = () => {
   const {
     data: cart,
@@ -164,7 +160,6 @@ const CartItems = () => {
 
   return (
     <div className="space-y-8">
-      {/* Cart header */}
       <div className="flex items-center justify-between border-b pb-4">
         <h2 className="text-lg font-semibold">
           Your Cart ({cart.item_count} item{cart.item_count !== 1 ? "s" : ""})
@@ -177,12 +172,10 @@ const CartItems = () => {
         </p>
       </div>
 
-      {/* Items */}
       {cart.items.map((item) => (
         <CartItemRow key={item.id} item={item} />
       ))}
 
-      {/* Cart totals */}
       <div className="space-y-2 border-t pt-4 text-sm">
         <div className="flex justify-between">
           <span className="text-gray-600">Subtotal</span>
