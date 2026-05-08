@@ -13,7 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { cartService } from "@/lib/services/cart-service";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import z from "zod";
@@ -35,8 +35,9 @@ type FormType = z.infer<typeof formSchema>;
 
 const OrderForm = () => {
   const router = useRouter();
+  // FIX: useQueryClient must be called at component level, NOT inside onSubmit
+  const queryClient = useQueryClient();
 
-  // Get cart totals to display in the summary
   const { data: cart } = useQuery({
     queryKey: ["cart"],
     queryFn: () => cartService.getCart(),
@@ -57,7 +58,6 @@ const OrderForm = () => {
   });
 
   const onSubmit = async (values: FormType) => {
-    // Build payload matching Django CreateOrderSerializer
     const payload = {
       customer_name: values.name,
       customer_email: values.email,
@@ -86,8 +86,13 @@ const OrderForm = () => {
       }
 
       const data = await response.json();
-      alert(`Order placed! Order number: ${data.order.order_number}`);
-      router.push("/");
+
+      // Clear cart cache so badge and cart page reset instantly
+      queryClient.invalidateQueries({ queryKey: ["cart"] });
+      queryClient.invalidateQueries({ queryKey: ["cart-count"] });
+
+      // Redirect to confirmation page
+      router.push(`/order-confirmation?order=${data.order.order_number}`);
     } catch (error: unknown) {
       const message =
         error instanceof Error ? error.message : "Failed to place order";
