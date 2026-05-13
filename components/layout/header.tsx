@@ -2,11 +2,12 @@
 
 import logo from "@/assets/images/logo.webp";
 import { MENU_LINKS, NAVLINKS } from "@/constants/links";
+import { useAuth } from "@/lib/hooks/useAuth";
 import { cn } from "@/lib/utils";
 import { ChevronDownIcon, MenuIcon, XIcon } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 import Container from "../shared/container";
 import { Button } from "../ui/button";
@@ -20,6 +21,14 @@ import CartLink from "./CartLink";
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const pathname = usePathname();
+  const router = useRouter();
+  const { isAuthenticated, user, logout } = useAuth();
+
+  const handleLogout = () => {
+    logout();
+    router.push("/");
+    setIsMenuOpen(false);
+  };
 
   return (
     <header className="bg-primary-100">
@@ -41,7 +50,6 @@ const Header = () => {
         <nav className="hidden items-center justify-center lg:flex">
           <ul className="flex items-center space-x-8">
             {NAVLINKS.map((link) => {
-              // Render CartLink with badge instead of plain link
               if (link.href === "/cart") {
                 return (
                   <li key={link.href}>
@@ -113,9 +121,35 @@ const Header = () => {
           </ul>
         </nav>
 
-        <Button size={"lg"} className="w-40 max-lg:hidden" asChild>
-          <Link href="/register">Register</Link>
-        </Button>
+        {/* Desktop Auth Buttons */}
+        <div className="hidden items-center gap-3 lg:flex">
+          {isAuthenticated && user ? (
+            <>
+              <span className="text-text text-sm font-medium">
+                Hi,{" "}
+                {(user as { first_name?: string; authenticated?: boolean })
+                  .first_name || "User"}
+              </span>
+              <Button
+                size="lg"
+                variant="outline"
+                className="w-32"
+                onClick={handleLogout}
+              >
+                Logout
+              </Button>
+            </>
+          ) : (
+            <>
+              <Button size="lg" variant="outline" className="w-32" asChild>
+                <Link href="/login">Login</Link>
+              </Button>
+              <Button size="lg" className="w-32" asChild>
+                <Link href="/register">Register</Link>
+              </Button>
+            </>
+          )}
+        </div>
 
         <button
           className="cursor-pointer lg:hidden"
@@ -142,7 +176,6 @@ const Header = () => {
             </button>
             <ul className="flex flex-col space-y-4">
               {NAVLINKS.map((link) => {
-                // Cart with badge in mobile menu too
                 if (link.href === "/cart") {
                   return (
                     <li key={link.href}>
@@ -204,9 +237,45 @@ const Header = () => {
                 );
               })}
             </ul>
-            <Button size="lg" className="mt-auto w-full" asChild>
-              <Link href="/register">Register</Link>
-            </Button>
+
+            {/* Mobile Auth */}
+            <div className="mt-auto flex flex-col gap-3">
+              {isAuthenticated && user ? (
+                <>
+                  <p className="text-center text-sm text-gray-600">
+                    Hi,{" "}
+                    {(user as { first_name?: string; authenticated?: boolean })
+                      .first_name || "User"}
+                  </p>
+                  <Button
+                    size="lg"
+                    variant="outline"
+                    className="w-full"
+                    onClick={handleLogout}
+                  >
+                    Logout
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Button
+                    size="lg"
+                    variant="outline"
+                    className="w-full"
+                    asChild
+                  >
+                    <Link href="/login" onClick={() => setIsMenuOpen(false)}>
+                      Login
+                    </Link>
+                  </Button>
+                  <Button size="lg" className="w-full" asChild>
+                    <Link href="/register" onClick={() => setIsMenuOpen(false)}>
+                      Register
+                    </Link>
+                  </Button>
+                </>
+              )}
+            </div>
           </aside>
         </>
       )}

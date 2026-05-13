@@ -11,41 +11,44 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { PasswordInput } from "@/components/ui/password-input";
-import ENDPOINTS from "@/constants/endpoints";
-import useMessage from "@/hooks/use-message";
-import useMutationAction from "@/hooks/use-mutation-action";
 import { poltawskiNowy } from "@/lib/font";
 import { cn } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { AxiosError } from "axios";
-//import type { AxiosError } from "axios";
 
-const registerSchema = z.object({
-  first_name: z.string().min(2, {
-    message: "First name must be at least 2 characters.",
-  }),
-  last_name: z.string().min(2, {
-    message: "Last name must be at least 2 characters.",
-  }),
-  username: z.string().min(3, {
-    message: "Username must be at least 3 characters.",
-  }),
-  email: z
-    .email({
-      message: "Please enter a valid email address.",
-    })
-    .min(1, "Email is required"),
-  password: z.string().min(8, {
-    message: "Password must be at least 8 characters.",
-  }),
-});
+const registerSchema = z
+  .object({
+    first_name: z
+      .string()
+      .min(2, { message: "First name must be at least 2 characters." }),
+    last_name: z
+      .string()
+      .min(2, { message: "Last name must be at least 2 characters." }),
+    username: z
+      .string()
+      .min(3, { message: "Username must be at least 3 characters." }),
+    email: z.string().email({ message: "Please enter a valid email address." }),
+    password: z
+      .string()
+      .min(8, { message: "Password must be at least 8 characters." }),
+    // FIX: Django requires password_confirm — added to form
+    password_confirm: z
+      .string()
+      .min(8, { message: "Please confirm your password." }),
+  })
+  .refine((data) => data.password === data.password_confirm, {
+    message: "Passwords do not match.",
+    path: ["password_confirm"],
+  });
 
 type RegisterFormValues = z.infer<typeof registerSchema>;
 
 export default function RegisterPage() {
+  const router = useRouter();
+
   const form = useForm<RegisterFormValues>({
     resolver: zodResolver(registerSchema),
     defaultValues: {
@@ -54,54 +57,58 @@ export default function RegisterPage() {
       username: "",
       email: "",
       password: "",
-    },
-  });
-
-  const { alertMessage } = useMessage();
-
-  const { mutateAsync, isPending } = useMutationAction<{
-    message: string;
-    user_id: string;
-    access: string;
-    email: string;
-  }>({
-    url: ENDPOINTS.CREATE_ACCOUNT,
-    onSuccess: (data) => {
-      alertMessage(data.message, "success");
-      form.reset();
-    },
-    onError: (error: AxiosError) => {
-      // Check if error has field-specific validation errors
-      const data = error?.response?.data;
-      let hasFieldErrors = false;
-      // If data is an object and not null
-      if (data && typeof data === "object" && !Array.isArray(data)) {
-        // Try to treat as Record<string, string[]>
-        const errorData = data as Record<string, string[]> & { detail?: string };
-        Object.keys(errorData).forEach((fieldName) => {
-          if (
-            fieldName in form.getValues() &&
-            Array.isArray(errorData[fieldName])
-          ) {
-            form.setError(fieldName as keyof RegisterFormValues, {
-              type: "server",
-              message: (errorData[fieldName] as string[])[0], // Take the first error message
-            });
-            hasFieldErrors = true;
-          }
-        });
-        if (!hasFieldErrors) {
-          alertMessage(errorData.detail || "An error occurred", "error");
-        }
-      } else {
-        // fallback for unknown error shape
-        alertMessage("An error occurred", "error");
-      }
+      password_confirm: "",
     },
   });
 
   async function onSubmit(values: RegisterFormValues) {
-    await mutateAsync(values);
+    try {
+      const apiBase =
+        process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000/api";
+
+      const response = await fetch(`${apiBase}/accounts/register/`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          first_name: values.first_name,
+          last_name: values.last_name,
+          username: values.username,
+          email: values.email,
+          password: values.password,
+          password_confirm: values.password_confirm,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        // Handle field-specific errors from Django
+        if (typeof data === "object") {
+          Object.keys(data).forEach((field) => {
+            if (field in form.getValues()) {
+              form.setError(field as keyof RegisterFormValues, {
+                message: Array.isArray(data[field])
+                  ? data[field][0]
+                  : data[field],
+              });
+            }
+          });
+          if (data.detail) {
+            form.setError("root", { message: data.detail });
+          }
+        }
+        return;
+      }
+
+      // Success — show message and redirect to login
+      alert(
+        "Registration successful! Please check your email to verify your account.",
+      );
+      router.push("/login");
+    } catch {
+      form.setError("root", { message: "Network error. Please try again." });
+    }
   }
 
   return (
@@ -201,12 +208,37 @@ export default function RegisterPage() {
               )}
             />
 
+            {/* FIX: Added password_confirm field — Django requires it */}
+            <FormField
+              control={form.control}
+              name="password_confirm"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Confirm Password</FormLabel>
+                  <FormControl>
+                    <PasswordInput placeholder="••••••••" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* Root error */}
+            {form.formState.errors.root && (
+              <p className="text-center text-sm text-red-500">
+                {form.formState.errors.root.message}
+              </p>
+            )}
+
             <Button
               type="submit"
-              className={cn("w-full", isPending && "opacity-50")}
+              className="w-full"
               size="lg"
+              disabled={form.formState.isSubmitting}
             >
-              {isPending ? "Creating Account..." : "Create Account"}
+              {form.formState.isSubmitting
+                ? "Creating Account..."
+                : "Create Account"}
             </Button>
           </form>
         </Form>
