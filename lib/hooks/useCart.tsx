@@ -1,13 +1,26 @@
-import { createContext, useContext } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { cartService, Cart, CartItem } from '@/lib/services/cart-service';
+import {
+  AddToCartPayload,
+  Cart,
+  CartItem,
+  cartService,
+} from "@/lib/services/cart-service";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { createContext, useContext } from "react";
 
 interface CartContextType {
   cart: Cart | null;
   loading: boolean;
-  addToCart: (productId: number, quantity?: number) => Promise<{ success: boolean; error?: string }>;
-  removeFromCart: (productId: number) => Promise<{ success: boolean; error?: string }>;
-  updateQuantity: (productId: number, quantity: number) => Promise<{ success: boolean; error?: string }>;
+  addToCart: (
+    productId: number,
+    quantity?: number,
+  ) => Promise<{ success: boolean; error?: string }>;
+  removeFromCart: (
+    itemId: number,
+  ) => Promise<{ success: boolean; error?: string }>;
+  updateQuantity: (
+    itemId: number,
+    quantity: number,
+  ) => Promise<{ success: boolean; error?: string }>;
   clearCart: () => Promise<{ success: boolean; error?: string }>;
   isInCart: (productId: number) => boolean;
   getCartItem: (productId: number) => CartItem | null;
@@ -27,35 +40,34 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
     isLoading,
     refetch: refetchCart,
   } = useQuery({
-    queryKey: ['cart'],
+    queryKey: ["cart"],
     queryFn: () => cartService.getCart(),
     staleTime: 1 * 60 * 1000, // 1 minute
     gcTime: 5 * 60 * 1000, // 5 minutes
   });
 
-  // Add to cart mutation
+  // Add to cart mutation - FIXED: Use AddToCartPayload
   const addToCartMutation = useMutation({
-    mutationFn: ({ productId, quantity }: { productId: number; quantity: number }) =>
-      cartService.addToCart(productId, quantity),
+    mutationFn: (payload: AddToCartPayload) => cartService.addToCart(payload),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['cart'] });
+      queryClient.invalidateQueries({ queryKey: ["cart"] });
     },
   });
 
-  // Remove from cart mutation
+  // Remove from cart mutation - FIXED: Use removeCartItem with item ID
   const removeFromCartMutation = useMutation({
-    mutationFn: (productId: number) => cartService.removeFromCart(productId),
+    mutationFn: (itemId: number) => cartService.removeCartItem(itemId),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['cart'] });
+      queryClient.invalidateQueries({ queryKey: ["cart"] });
     },
   });
 
-  // Update quantity mutation
+  // Update quantity mutation - FIXED: Use updateCartItem with item ID
   const updateQuantityMutation = useMutation({
-    mutationFn: ({ productId, quantity }: { productId: number; quantity: number }) =>
-      cartService.updateQuantity(productId, quantity),
+    mutationFn: ({ itemId, quantity }: { itemId: number; quantity: number }) =>
+      cartService.updateCartItem(itemId, { quantity, action: "set" }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['cart'] });
+      queryClient.invalidateQueries({ queryKey: ["cart"] });
     },
   });
 
@@ -63,42 +75,62 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
   const clearCartMutation = useMutation({
     mutationFn: () => cartService.clearCart(),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['cart'] });
+      queryClient.invalidateQueries({ queryKey: ["cart"] });
     },
   });
 
+  // FIXED: Construct proper payload for addToCart
   const addToCart = async (productId: number, quantity: number = 1) => {
     try {
-      await addToCartMutation.mutateAsync({ productId, quantity });
+      const payload: AddToCartPayload = {
+        product_id: productId,
+        quantity,
+        flavour_1: "",
+        flavour_2: "",
+        size: "",
+        colours: "",
+        cake_topper: 0,
+        candle: 0,
+        birthday_card: 0,
+        chocolate: 0,
+        wine: 0,
+        whiskey_200ml: 0,
+        additional_notes: "",
+      };
+      await addToCartMutation.mutateAsync(payload);
       return { success: true };
     } catch (error: unknown) {
-      return { 
-        success: false, 
-        error: error instanceof Error ? error.message : 'Failed to add to cart' 
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : "Failed to add to cart",
       };
     }
   };
 
-  const removeFromCart = async (productId: number) => {
+  // FIXED: removeFromCart now uses item ID (not product ID)
+  const removeFromCart = async (itemId: number) => {
     try {
-      await removeFromCartMutation.mutateAsync(productId);
+      await removeFromCartMutation.mutateAsync(itemId);
       return { success: true };
     } catch (error: unknown) {
-      return { 
-        success: false, 
-        error: error instanceof Error ? error.message : 'Failed to remove from cart' 
+      return {
+        success: false,
+        error:
+          error instanceof Error ? error.message : "Failed to remove from cart",
       };
     }
   };
 
-  const updateQuantity = async (productId: number, quantity: number) => {
+  // FIXED: updateQuantity now uses item ID (not product ID)
+  const updateQuantity = async (itemId: number, quantity: number) => {
     try {
-      await updateQuantityMutation.mutateAsync({ productId, quantity });
+      await updateQuantityMutation.mutateAsync({ itemId, quantity });
       return { success: true };
     } catch (error: unknown) {
-      return { 
-        success: false, 
-        error: error instanceof Error ? error.message : 'Failed to update quantity' 
+      return {
+        success: false,
+        error:
+          error instanceof Error ? error.message : "Failed to update quantity",
       };
     }
   };
@@ -108,30 +140,34 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
       await clearCartMutation.mutateAsync();
       return { success: true };
     } catch (error: unknown) {
-      return { 
-        success: false, 
-        error: error instanceof Error ? error.message : 'Failed to clear cart' 
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : "Failed to clear cart",
       };
     }
   };
 
+  // FIXED: Use cart.items (not cart_items)
   const isInCart = (productId: number) => {
-    if (!cart?.cart_items) return false;
-    return cart.cart_items.some(item => item.product.id === productId);
+    if (!cart?.items) return false;
+    return cart.items.some((item) => item.product.id === productId);
   };
 
+  // FIXED: Use cart.items
   const getCartItem = (productId: number) => {
-    if (!cart?.cart_items) return null;
-    return cart.cart_items.find(item => item.product.id === productId) || null;
+    if (!cart?.items) return null;
+    return cart.items.find((item) => item.product.id === productId) || null;
   };
 
+  // FIXED: Use cart.items
   const getTotalItems = () => {
-    if (!cart?.cart_items) return 0;
-    return cart.cart_items.reduce((total, item) => total + item.quantity, 0);
+    if (!cart?.items) return 0;
+    return cart.items.reduce((total, item) => total + item.quantity, 0);
   };
 
+  // FIXED: Use grand_total (not total_price)
   const getTotalPrice = () => {
-    return cart?.total_price || '0.00';
+    return cart?.grand_total || "0.00";
   };
 
   const refreshCart = () => {
@@ -139,19 +175,21 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   return (
-    <CartContext.Provider value={{
-      cart: cart || null,
-      loading: isLoading,
-      addToCart,
-      removeFromCart,
-      updateQuantity,
-      clearCart,
-      isInCart,
-      getCartItem,
-      getTotalItems,
-      getTotalPrice,
-      refreshCart,
-    }}>
+    <CartContext.Provider
+      value={{
+        cart: cart || null,
+        loading: isLoading,
+        addToCart,
+        removeFromCart,
+        updateQuantity,
+        clearCart,
+        isInCart,
+        getCartItem,
+        getTotalItems,
+        getTotalPrice,
+        refreshCart,
+      }}
+    >
       {children}
     </CartContext.Provider>
   );
@@ -160,7 +198,7 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
 export const useCart = () => {
   const context = useContext(CartContext);
   if (!context) {
-    throw new Error('useCart must be used within a CartProvider');
+    throw new Error("useCart must be used within a CartProvider");
   }
   return context;
 };

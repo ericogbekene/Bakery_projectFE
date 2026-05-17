@@ -6,8 +6,10 @@ import { poltawskiNowy } from "@/lib/font";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
+import { Suspense } from "react";
 
-export default function Page() {
+// Component that uses useSearchParams
+function OrderConfirmationContent() {
   const searchParams = useSearchParams();
   const orderNumber = searchParams.get("order");
 
@@ -87,10 +89,28 @@ export default function Page() {
             <Link href="/menu">Continue Shopping</Link>
           </Button>
           <Button asChild size="lg" variant="outline" className="flex-1">
+            <Link href={`/track-order`}>Track Order</Link>
+          </Button>
+          <Button asChild size="lg" variant="outline" className="flex-1">
             <Link href="/">Go Home</Link>
           </Button>
         </div>
       </Container>
     </main>
+  );
+}
+
+// Main page component with Suspense boundary
+export default function Page() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex min-h-screen items-center justify-center">
+          <div className="h-12 w-12 animate-spin rounded-full border-b-2 border-blue-500"></div>
+        </div>
+      }
+    >
+      <OrderConfirmationContent />
+    </Suspense>
   );
 }

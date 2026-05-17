@@ -18,7 +18,7 @@ import { cn } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Image from "next/image";
 import { useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import z from "zod";
 
@@ -39,7 +39,8 @@ interface DjangoProduct {
   available: boolean;
 }
 
-export default function Page() {
+// Component that uses useSearchParams
+function OrderForm() {
   const searchParams = useSearchParams();
   const productId = searchParams.get("id");
   const productTitle = searchParams.get("title");
@@ -73,14 +74,13 @@ export default function Page() {
     )
       .then((res) => res.json())
       .then((data) => {
-        // data.results is array from list endpoint
         const results: DjangoProduct[] = data.results ?? [];
         const found = results.find((p) => String(p.id) === productId);
         setProduct(found ?? null);
       })
       .catch(console.error)
       .finally(() => setLoading(false));
-  }, [productId]);
+  }, [productId, searchParams]);
 
   const onSubmit = async (values: FormType) => {
     if (!product) {
@@ -259,5 +259,20 @@ export default function Page() {
         </div>
       </Container>
     </main>
+  );
+}
+
+// Main page component with Suspense boundary
+export default function Page() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex min-h-screen items-center justify-center">
+          <div className="h-12 w-12 animate-spin rounded-full border-b-2 border-blue-500"></div>
+        </div>
+      }
+    >
+      <OrderForm />
+    </Suspense>
   );
 }

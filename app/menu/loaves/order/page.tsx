@@ -19,7 +19,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useQueryClient } from "@tanstack/react-query";
 import Image from "next/image";
 import { useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import z from "zod";
 
@@ -38,7 +38,8 @@ interface DjangoProduct {
   thumbnail_url: string | null;
 }
 
-export default function Page() {
+// Component that uses useSearchParams
+function OrderForm() {
   const searchParams = useSearchParams();
   const productId = searchParams.get("id");
   const productTitle = searchParams.get("title");
@@ -256,5 +257,20 @@ export default function Page() {
         </div>
       </Container>
     </main>
+  );
+}
+
+// Main page component with Suspense boundary
+export default function Page() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex min-h-screen items-center justify-center">
+          <div className="h-12 w-12 animate-spin rounded-full border-b-2 border-blue-500"></div>
+        </div>
+      }
+    >
+      <OrderForm />
+    </Suspense>
   );
 }

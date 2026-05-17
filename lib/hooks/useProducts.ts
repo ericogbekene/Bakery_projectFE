@@ -1,5 +1,10 @@
-import { useQuery } from '@tanstack/react-query';
-import { productService, ProductFilters, Product } from '@/lib/services/product-service';
+import {
+  Product,
+  ProductFilters,
+  ProductListResponse,
+  productService,
+} from "@/lib/services/product-service";
+import { useQuery } from "@tanstack/react-query";
 
 interface UseProductsOptions extends ProductFilters {
   enabled?: boolean;
@@ -14,22 +19,22 @@ interface UseProductsReturn {
     count: number;
     next?: string;
     previous?: string;
+    total_pages?: number;
+    current_page?: number;
+    page_size?: number;
   };
 }
 
 /**
  * Hook for fetching products from external API
  */
-export function useProducts(options: UseProductsOptions = {}): UseProductsReturn {
+export function useProducts(
+  options: UseProductsOptions = {},
+): UseProductsReturn {
   const { enabled = true, ...filters } = options;
 
-  const {
-    data,
-    isLoading,
-    error,
-    refetch,
-  } = useQuery({
-    queryKey: ['products', filters],
+  const { data, isLoading, error, refetch } = useQuery<ProductListResponse>({
+    queryKey: ["products", filters],
     queryFn: () => productService.getProducts(filters),
     enabled,
     staleTime: 5 * 60 * 1000, // 5 minutes
@@ -41,11 +46,17 @@ export function useProducts(options: UseProductsOptions = {}): UseProductsReturn
     loading: isLoading,
     error: error?.message || null,
     refetch,
-    pagination: data ? {
-      count: data.count,
-      next: data.next,
-      previous: data.previous,
-    } : undefined,
+    pagination: data
+      ? {
+          count: data.count,
+          // Convert null to undefined
+          next: data.next === null ? undefined : data.next,
+          previous: data.previous === null ? undefined : data.previous,
+          total_pages: data.total_pages,
+          current_page: data.current_page,
+          page_size: data.page_size,
+        }
+      : undefined,
   };
 }
 
@@ -59,7 +70,7 @@ export function useProduct(slug: string, enabled: boolean = true) {
     error,
     refetch,
   } = useQuery({
-    queryKey: ['product', slug],
+    queryKey: ["product", slug],
     queryFn: () => productService.getProduct(slug),
     enabled: enabled && !!slug,
     staleTime: 5 * 60 * 1000,
@@ -77,14 +88,12 @@ export function useProduct(slug: string, enabled: boolean = true) {
 /**
  * Hook for searching products
  */
-export function useProductSearch(query: string, filters: Omit<ProductFilters, 'search'> = {}) {
-  const {
-    data,
-    isLoading,
-    error,
-    refetch,
-  } = useQuery({
-    queryKey: ['product-search', query, filters],
+export function useProductSearch(
+  query: string,
+  filters: Omit<ProductFilters, "search"> = {},
+) {
+  const { data, isLoading, error, refetch } = useQuery<ProductListResponse>({
+    queryKey: ["product-search", query, filters],
     queryFn: () => productService.searchProducts(query, filters),
     enabled: !!query,
     staleTime: 2 * 60 * 1000, // 2 minutes
@@ -96,11 +105,16 @@ export function useProductSearch(query: string, filters: Omit<ProductFilters, 's
     loading: isLoading,
     error: error?.message || null,
     refetch,
-    pagination: data ? {
-      count: data.count,
-      next: data.next,
-      previous: data.previous,
-    } : undefined,
+    pagination: data
+      ? {
+          count: data.count,
+          next: data.next === null ? undefined : data.next,
+          previous: data.previous === null ? undefined : data.previous,
+          total_pages: data.total_pages,
+          current_page: data.current_page,
+          page_size: data.page_size,
+        }
+      : undefined,
   };
 }
 
@@ -108,20 +122,18 @@ export function useProductSearch(query: string, filters: Omit<ProductFilters, 's
  * Hook for fetching featured products
  */
 export function useFeaturedProducts() {
-  const {
-    data: products,
-    isLoading,
-    error,
-    refetch,
-  } = useQuery({
-    queryKey: ['featured-products'],
-    queryFn: () => productService.getFeaturedProducts(),
+  const { data, isLoading, error, refetch } = useQuery<ProductListResponse>({
+    queryKey: ["featured-products"],
+    // FIXED: Use regular products endpoint with page_size=4
+
+    queryFn: () =>
+      productService.getProducts({ page_size: 4, ordering: "-created_at" }),
     staleTime: 10 * 60 * 1000, // 10 minutes
     gcTime: 30 * 60 * 1000, // 30 minutes
   });
 
   return {
-    products: products || [],
+    products: data?.results || [],
     loading: isLoading,
     error: error?.message || null,
     refetch,
