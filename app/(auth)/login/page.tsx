@@ -29,7 +29,7 @@ type LoginFormValues = z.infer<typeof loginSchema>;
 
 export default function LoginPage() {
   const router = useRouter();
-  const { login } = useAuth();
+  const { login, isAdmin } = useAuth();
 
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
@@ -43,7 +43,20 @@ export default function LoginPage() {
     });
 
     if (result.success) {
-      router.push("/");
+      // Check if there was a redirect destination stored
+      const redirectTo = sessionStorage.getItem("redirectAfterLogin");
+      sessionStorage.removeItem("redirectAfterLogin");
+
+      // Small delay to ensure isAdmin state is updated
+      setTimeout(() => {
+        if (redirectTo) {
+          router.push(redirectTo);
+        } else if (isAdmin) {
+          router.push("/admin");
+        } else {
+          router.push("/");
+        }
+      }, 100);
     } else {
       form.setError("root", {
         message: result.error || "Invalid email or password",

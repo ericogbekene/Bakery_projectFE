@@ -6,6 +6,7 @@ import { CartItem, cartService } from "@/lib/services/cart-service";
 import { cn } from "@/lib/utils";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import Image from "next/image";
+import Link from "next/link"; // ADD THIS IMPORT
 
 // Helper to invalidate all cart-related queries at once
 const invalidateCart = (queryClient: ReturnType<typeof useQueryClient>) => {
@@ -18,7 +19,7 @@ const CartItemRow = ({ item }: { item: CartItem }) => {
 
   const removeMutation = useMutation({
     mutationFn: () => cartService.removeCartItem(item.id),
-    onSuccess: () => invalidateCart(queryClient), // FIX: was only invalidating ["cart"]
+    onSuccess: () => invalidateCart(queryClient),
   });
 
   const specs = [
@@ -151,9 +152,10 @@ const CartItems = () => {
     return (
       <div className="py-16 text-center">
         <p className="text-lg text-gray-400">Your cart is empty.</p>
-        <a href="/menu" className="text-primary mt-4 inline-block underline">
+        {/* FIXED: Changed from <a> to Next.js Link component */}
+        <Link href="/menu" className="text-primary mt-4 inline-block underline">
           Browse our menu
-        </a>
+        </Link>
       </div>
     );
   }

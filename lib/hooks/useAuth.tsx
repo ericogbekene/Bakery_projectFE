@@ -14,6 +14,8 @@ interface User {
   email?: string;
   first_name?: string;
   last_name?: string;
+  is_staff?: boolean; // Add this
+  is_superuser?: boolean; // Add this
 }
 
 interface AuthContextType {
@@ -23,6 +25,7 @@ interface AuthContextType {
   register: (userData: RegisterData) => Promise<AuthResponse>;
   logout: () => void;
   isAuthenticated: boolean;
+  isAdmin: boolean; // Add this helper
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -73,6 +76,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     setUser(null);
   };
 
+  // Helper to check if user is admin
+  const isAdmin = user?.is_staff === true || user?.is_superuser === true;
+
   return (
     <AuthContext.Provider
       value={{
@@ -82,6 +88,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         register,
         logout,
         isAuthenticated: !!user,
+        isAdmin, // Add this
       }}
     >
       {children}
