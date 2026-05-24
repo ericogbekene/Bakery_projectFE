@@ -1,5 +1,5 @@
-import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
-import ENDPOINTS from '@/constants/endpoints';
+import ENDPOINTS from "@/constants/endpoints";
+import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from "axios";
 
 /**
  * Custom error class for API errors
@@ -8,31 +8,30 @@ export class APIError extends Error {
   constructor(
     public status: number,
     public data: unknown,
-    message: string
+    message: string,
   ) {
     super(message);
-    this.name = 'APIError';
+    this.name = "APIError";
   }
 }
 
 /**
- * HTTP Client for M&C Cakes API
- * Handles authentication, error handling, and request/response interceptors
+ * HTTP Client for MC Cakes Django API
  */
 class HttpClient {
   private client: AxiosInstance;
-  private baseURL: string;
   private token: string | null = null;
 
   constructor() {
-    this.baseURL = ENDPOINTS.EXTERNAL_API;
-    
+    // FIX: was ENDPOINTS.EXTERNAL_API which no longer exists.
+    // Now correctly reads ENDPOINTS.BASE_URL which maps to
+    // NEXT_PUBLIC_API_BASE_URL env var (http://localhost:8000/api in dev).
     this.client = axios.create({
-      baseURL: this.baseURL,
+      baseURL: ENDPOINTS.BASE_URL,
       timeout: 10000,
+      withCredentials: true, // FIX: required for Django session-based guest cart
       headers: {
-        'Content-Type': 'application/json',
-        'User-Agent': 'M&C-Cakes-Frontend/1.0',
+        "Content-Type": "application/json",
       },
     });
 
@@ -40,11 +39,8 @@ class HttpClient {
     this.loadTokenFromStorage();
   }
 
-  /**
-   * Setup request and response interceptors
-   */
   private setupInterceptors(): void {
-    // Request interceptor for authentication
+    // Request interceptor — attach Bearer token if present
     this.client.interceptors.request.use(
       (config) => {
         if (this.token) {
@@ -52,213 +48,163 @@ class HttpClient {
         }
         return config;
       },
-      (error) => Promise.reject(error)
+      (error) => Promise.reject(error),
     );
 
-    // Response interceptor for error handling
+    // Response interceptor — handle 401 with token refresh
     this.client.interceptors.response.use(
       (response) => response,
       async (error) => {
         if (error.response?.status === 401) {
-          // Try to refresh token
           try {
             await this.refreshToken();
-            // Retry the original request
             return this.client.request(error.config);
           } catch {
-            // If refresh fails, clear tokens and redirect to login
             this.clearTokens();
-            window.location.href = '/login';
+            // Only redirect in browser context
+            if (typeof window !== "undefined") {
+              window.location.href = "/login";
+            }
             return Promise.reject(error);
           }
         }
         return Promise.reject(error);
-      }
+      },
     );
   }
 
-  /**
-   * Load token from localStorage
-   */
   private loadTokenFromStorage(): void {
-    if (typeof window !== 'undefined') {
-      this.token = localStorage.getItem('access_token');
+    if (typeof window !== "undefined") {
+      this.token = localStorage.getItem("access_token");
     }
   }
 
-  /**
-   * Set authentication token
-   */
   setToken(token: string | null): void {
     this.token = token;
-    if (typeof window !== 'undefined') {
+    if (typeof window !== "undefined") {
       if (token) {
-        localStorage.setItem('access_token', token);
+        localStorage.setItem("access_token", token);
       } else {
-        localStorage.removeItem('access_token');
+        localStorage.removeItem("access_token");
       }
     }
   }
 
-  /**
-   * Set refresh token
-   */
   setRefreshToken(token: string | null): void {
-    if (typeof window !== 'undefined') {
+    if (typeof window !== "undefined") {
       if (token) {
-        localStorage.setItem('refresh_token', token);
+        localStorage.setItem("refresh_token", token);
       } else {
-        localStorage.removeItem('refresh_token');
+        localStorage.removeItem("refresh_token");
       }
     }
   }
 
-  /**
-   * Get refresh token
-   */
   private getRefreshToken(): string | null {
-    if (typeof window !== 'undefined') {
-      return localStorage.getItem('refresh_token');
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("refresh_token");
     }
     return null;
   }
 
-  /**
-   * Clear all tokens
-   */
   clearTokens(): void {
     this.setToken(null);
     this.setRefreshToken(null);
   }
 
-  /**
-   * Refresh access token
-   */
   private async refreshToken(): Promise<void> {
     const refreshToken = this.getRefreshToken();
-    if (!refreshToken) {
-      throw new Error('No refresh token available');
-    }
+    if (!refreshToken) throw new Error("No refresh token available");
 
-    try {
-      const response = await this.client.post(ENDPOINTS.EXTERNAL.AUTH.REFRESH, {
-        refresh: refreshToken,
-      });
+    const response = await this.client.post(ENDPOINTS.EXTERNAL.AUTH.REFRESH, {
+      refresh: refreshToken,
+    });
 
-      if (response.data.access) {
-        this.setToken(response.data.access);
-      } else {
-        throw new Error('No access token in refresh response');
-      }
-    } catch (error) {
+    if (response.data.access) {
+      this.setToken(response.data.access);
+    } else {
       this.clearTokens();
-      throw error;
+      throw new Error("No access token in refresh response");
     }
   }
 
-  /**
-   * Generic request method with error handling
-   */
   private async request<T = unknown>(
     endpoint: string,
-    options: AxiosRequestConfig = {}
+    options: AxiosRequestConfig = {},
   ): Promise<T> {
     try {
       const response: AxiosResponse<T> = await this.client.request({
         url: endpoint,
         ...options,
       });
-
       return response.data;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       if (error.response) {
-        // Server responded with error status
         const errorData = error.response.data || {};
         throw new APIError(
           error.response.status,
           errorData,
-          errorData.detail || errorData.message || error.response.statusText
+          errorData.detail || errorData.message || error.response.statusText,
         );
       } else if (error.request) {
-        // Network error
-        throw new APIError(0, {}, 'Network error. Please check your connection.');
+        throw new APIError(
+          0,
+          {},
+          "Network error. Please check your connection.",
+        );
       } else {
-        // Other error
-        throw new APIError(0, {}, error.message || 'An unexpected error occurred');
+        throw new APIError(
+          0,
+          {},
+          error.message || "An unexpected error occurred",
+        );
       }
     }
   }
 
-  /**
-   * GET request
-   */
-  async get<T = unknown>(endpoint: string, config?: AxiosRequestConfig): Promise<T> {
-    return this.request<T>(endpoint, { method: 'GET', ...config });
+  async get<T = unknown>(
+    endpoint: string,
+    config?: AxiosRequestConfig,
+  ): Promise<T> {
+    return this.request<T>(endpoint, { method: "GET", ...config });
   }
 
-  /**
-   * POST request
-   */
   async post<T = unknown>(
     endpoint: string,
     data?: unknown,
-    config?: AxiosRequestConfig
+    config?: AxiosRequestConfig,
   ): Promise<T> {
-    return this.request<T>(endpoint, {
-      method: 'POST',
-      data,
-      ...config,
-    });
+    return this.request<T>(endpoint, { method: "POST", data, ...config });
   }
 
-  /**
-   * PUT request
-   */
   async put<T = unknown>(
     endpoint: string,
     data?: unknown,
-    config?: AxiosRequestConfig
+    config?: AxiosRequestConfig,
   ): Promise<T> {
-    return this.request<T>(endpoint, {
-      method: 'PUT',
-      data,
-      ...config,
-    });
+    return this.request<T>(endpoint, { method: "PUT", data, ...config });
   }
 
-  /**
-   * PATCH request
-   */
   async patch<T = unknown>(
     endpoint: string,
     data?: unknown,
-    config?: AxiosRequestConfig
+    config?: AxiosRequestConfig,
   ): Promise<T> {
-    return this.request<T>(endpoint, {
-      method: 'PATCH',
-      data,
-      ...config,
-    });
+    return this.request<T>(endpoint, { method: "PATCH", data, ...config });
   }
 
-  /**
-   * DELETE request
-   */
-  async delete<T = unknown>(endpoint: string, config?: AxiosRequestConfig): Promise<T> {
-    return this.request<T>(endpoint, { method: 'DELETE', ...config });
+  async delete<T = unknown>(
+    endpoint: string,
+    config?: AxiosRequestConfig,
+  ): Promise<T> {
+    return this.request<T>(endpoint, { method: "DELETE", ...config });
   }
 
-  /**
-   * Check if user is authenticated
-   */
   isAuthenticated(): boolean {
     return !!this.token;
   }
 
-  /**
-   * Health check
-   */
   async healthCheck(): Promise<{
     status: string;
     responseTime: number;
@@ -267,16 +213,14 @@ class HttpClient {
     const start = Date.now();
     try {
       await this.get(ENDPOINTS.EXTERNAL.HEALTH);
-      const responseTime = Date.now() - start;
-      
       return {
-        status: 'healthy',
-        responseTime,
+        status: "healthy",
+        responseTime: Date.now() - start,
         timestamp: new Date().toISOString(),
       };
     } catch {
       return {
-        status: 'unhealthy',
+        status: "unhealthy",
         responseTime: Date.now() - start,
         timestamp: new Date().toISOString(),
       };
@@ -284,6 +228,5 @@ class HttpClient {
   }
 }
 
-// Create singleton instance
 export const httpClient = new HttpClient();
 export default httpClient;

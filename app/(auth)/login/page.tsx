@@ -11,56 +11,57 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { PasswordInput } from "@/components/ui/password-input";
-import ENDPOINTS from "@/constants/endpoints";
-import useMessage from "@/hooks/use-message";
-import useMutationAction from "@/hooks/use-mutation-action";
 import { poltawskiNowy } from "@/lib/font";
+import { useAuth } from "@/lib/hooks/useAuth";
 import { cn } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { AxiosError } from "axios";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
 const loginSchema = z.object({
-  email: z
-    .email({
-      message: "Please enter a valid email address.",
-    })
-    .min(1, "Email is required"),
-  password: z.string().min(1, {
-    message: "Password is required",
-  }),
+  email: z.string().email({ message: "Please enter a valid email address." }),
+  password: z.string().min(1, { message: "Password is required" }),
 });
 
 type LoginFormValues = z.infer<typeof loginSchema>;
 
 export default function LoginPage() {
+  const router = useRouter();
+  const { login, isAdmin } = useAuth();
+
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
-    defaultValues: {
-      email: "",
-      password: "",
-    },
-  });
-
-  const { alertMessage } = useMessage();
-
-  const { mutateAsync, isPending } = useMutationAction<T.LoginResponse>({
-    url: ENDPOINTS.LOGIN,
-    onSuccess: (data) => {
-      alertMessage(data.message, "success");
-    },
-    onError: (error: AxiosError) => {
-      const errorMessage =
-        (error.response?.data as { detail?: string })?.detail ||
-        "An error occurred";
-      alertMessage(errorMessage, "error");
-    },
+    defaultValues: { email: "", password: "" },
   });
 
   async function onSubmit(values: LoginFormValues) {
-    await mutateAsync(values);
+    const result = await login({
+      email: values.email,
+      password: values.password,
+    });
+
+    if (result.success) {
+      // Check if there was a redirect destination stored
+      const redirectTo = sessionStorage.getItem("redirectAfterLogin");
+      sessionStorage.removeItem("redirectAfterLogin");
+
+      // Small delay to ensure isAdmin state is updated
+      setTimeout(() => {
+        if (redirectTo) {
+          router.push(redirectTo);
+        } else if (isAdmin) {
+          router.push("/admin");
+        } else {
+          router.push("/");
+        }
+      }, 100);
+    } else {
+      form.setError("root", {
+        message: result.error || "Invalid email or password",
+      });
+    }
   }
 
   return (
@@ -109,15 +110,18 @@ export default function LoginPage() {
                 <FormItem>
                   <FormLabel>Password</FormLabel>
                   <FormControl>
-                    <PasswordInput
-                      placeholder="••••••••"
-                      {...field}
-                    />
+                    <PasswordInput placeholder="••••••••" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
+
+            {form.formState.errors.root && (
+              <p className="text-center text-sm text-red-500">
+                {form.formState.errors.root.message}
+              </p>
+            )}
 
             <div className="text-right">
               <Link
@@ -130,10 +134,11 @@ export default function LoginPage() {
 
             <Button
               type="submit"
-              className={cn("w-full", isPending && "opacity-50")}
+              className="w-full"
               size="lg"
+              disabled={form.formState.isSubmitting}
             >
-              {isPending ? "Signing in..." : "Sign in"}
+              {form.formState.isSubmitting ? "Signing in..." : "Sign in"}
             </Button>
           </form>
         </Form>

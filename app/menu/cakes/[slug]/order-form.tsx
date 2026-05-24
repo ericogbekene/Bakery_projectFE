@@ -1,10 +1,5 @@
 "use client";
 
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useMemo } from "react";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
-
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -21,7 +16,12 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { Textarea } from "@/components/ui/textarea";
+import { cartService } from "@/lib/services/cart-service";
 import { cn } from "@/lib/utils";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useMemo } from "react";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
 
 const FLAVOURS = [
   "Vanilla",
@@ -42,10 +42,24 @@ const EXTRAS = [
   { name: "200ml whiskey", price: 8000 },
 ] as const;
 
+const SIZE_TO_DJANGO: Record<string, string> = {
+  "6 inches": "6",
+  "8 inches": "8",
+  "10 inches": "10",
+  "12 inches": "12",
+  "14 inches": "14",
+};
+
 const formSchema = z.object({
-  flavour: z.array(z.string()).min(1, { message: "Select at least 1" }).max(2),
-  size: z.string().min(1, { message: "Select size" }),
-  colours: z.array(z.string()).min(1).max(2),
+  flavour: z
+    .array(z.string())
+    .min(1, { message: "Select at least 1 flavour" })
+    .max(2),
+  size: z.string().min(1, { message: "Select a size" }),
+  colours: z
+    .array(z.string())
+    .min(1, { message: "Select at least 1 colour" })
+    .max(2),
   extras: z.record(z.string(), z.number().min(0)),
   notes: z.string().optional(),
 });
@@ -76,7 +90,11 @@ function CheckboxItem({
   );
 }
 
-const OrderForm = () => {
+interface OrderFormProps {
+  productId: number;
+}
+
+const OrderForm = ({ productId }: OrderFormProps) => {
   const form = useForm<FormType>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -103,28 +121,47 @@ const OrderForm = () => {
 
   const basePrice = useMemo(() => {
     switch (watchSize) {
-      case "6 inches":
-        return 10000;
-      case "8 inches":
-        return 15000;
-      case "10 inches":
-        return 20000;
-      case "12 inches":
-        return 25000;
-      case "14 inches":
-        return 30000;
-      default:
-        return 0;
+      case "6 inches":  return 10000;
+      case "8 inches":  return 15000;
+      case "10 inches": return 20000;
+      case "12 inches": return 25000;
+      case "14 inches": return 30000;
+      default:          return 0;
     }
   }, [watchSize]);
 
-  function handleSubmit(data: FormType) {
-    console.log("Order submitted", data, (basePrice + extrasPrice));
+  async function handleSubmit(data: FormType) {
+    const payload = {
+      product_id:       productId,
+      quantity:         1,
+      flavour_1:        data.flavour[0] ?? "",
+      flavour_2:        data.flavour[1] ?? "",
+      size:             SIZE_TO_DJANGO[data.size] ?? data.size,
+      colours:          data.colours.join(", "),
+      cake_topper:      data.extras["Cake topper"]   ?? 0,
+      candle:           data.extras["Candle"]         ?? 0,
+      birthday_card:    data.extras["Birthday card"]  ?? 0,
+      chocolate:        data.extras["Chocolate"]      ?? 0,
+      wine:             data.extras["Wine"]            ?? 0,
+      whiskey_200ml:    data.extras["200ml whiskey"]  ?? 0,
+      additional_notes: data.notes ?? "",
+    };
+
+    try {
+      await cartService.addToCart(payload);
+      alert("Added to cart!");
+      form.reset();
+    } catch (error: unknown) {
+      const message =
+        error instanceof Error ? error.message : "Failed to add to cart";
+      alert(message);
+    }
   }
 
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
+
         {/* Flavour */}
         <FormField
           control={form.control}
@@ -152,12 +189,9 @@ const OrderForm = () => {
                       selected={field.value.includes(fl)}
                       onToggle={() => {
                         const exists = field.value.includes(fl);
-                        let next: string[];
-                        if (exists) {
-                          next = field.value.filter((v) => v !== fl);
-                        } else {
-                          next = [...field.value, fl].slice(-2);
-                        }
+                        const next = exists
+                          ? field.value.filter((v) => v !== fl)
+                          : [...field.value, fl].slice(-2);
                         field.onChange(next);
                       }}
                     />
@@ -233,12 +267,9 @@ const OrderForm = () => {
                       selected={field.value.includes(col)}
                       onToggle={() => {
                         const exists = field.value.includes(col);
-                        let next: string[];
-                        if (exists) {
-                          next = field.value.filter((v) => v !== col);
-                        } else {
-                          next = [...field.value, col].slice(-2);
-                        }
+                        const next = exists
+                          ? field.value.filter((v) => v !== col)
+                          : [...field.value, col].slice(-2);
                         field.onChange(next);
                       }}
                     />
@@ -302,6 +333,7 @@ const OrderForm = () => {
           ))}
         </div>
 
+        {/* Notes */}
         <FormField
           control={form.control}
           name="notes"
@@ -311,7 +343,7 @@ const OrderForm = () => {
               <FormControl>
                 <Textarea
                   className="h-24"
-                  placeholder="Tell us if you want a 'Happy Birthday' written on the cake or cake board or any extra information"
+                  placeholder="Tell us if you want a 'Happy Birthday' written on the cake or any extra information"
                   {...field}
                 />
               </FormControl>
@@ -328,17 +360,21 @@ const OrderForm = () => {
           </div>
           <div className="flex items-center lg:justify-end">
             <Button
-              disabled={basePrice + extrasPrice === 0}
+              disabled={
+                basePrice + extrasPrice === 0 || form.formState.isSubmitting
+              }
               type="submit"
               size="lg"
               className="ml-auto w-full lg:w-44"
             >
-              Add to cart
+              {form.formState.isSubmitting ? "Adding..." : "Add to cart"}
             </Button>
           </div>
         </div>
+
       </form>
     </Form>
   );
 };
+
 export default OrderForm;
