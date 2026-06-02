@@ -58,7 +58,7 @@ export default async function Page({ params }: PageProps) {
               </p>
             )}
           </header>
-          <OrderForm productId={product.id} />
+          <OrderForm productId={product.id} slug={slug} />
         </div>
       </Container>
     </main>

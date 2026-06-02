@@ -55,6 +55,12 @@ export interface Cart {
   updated_at: string;
 }
 
+
+export interface AddonInput {
+  addon_id: number;
+  quantity: number;
+}
+
 // Full payload for adding a cake to cart — matches Django AddToCartSerializer
 export interface AddToCartPayload {
   product_id: number;
@@ -69,7 +75,10 @@ export interface AddToCartPayload {
   chocolate?: number;
   wine?: number;
   whiskey_200ml?: number;
+  addons?: AddonInput[];
   additional_notes?: string;
+  
+
 }
 
 export interface UpdateCartItemPayload {
@@ -87,6 +96,93 @@ export interface CartSummary {
   delivery_cost: string;
   grand_total: string;
 }
+
+
+// Add this new type
+export interface CartItemAddon {
+  id: number;
+  addon: number;
+  addon_name: string;
+  addon_slug: string;
+  quantity: number;
+  unit_price: string;
+  total_cost: string;
+}
+
+// Update CartItem — add dynamic_addons field
+export interface CartItem {
+  id: number;
+  product: CartItemProduct;
+  quantity: number;
+
+  // Cake customization
+  flavour_1: string;
+  flavour_2: string;
+  size: string;
+  colours: string;
+
+  // Legacy add-ons
+  cake_topper: number;
+  candle: number;
+  birthday_card: number;
+  chocolate: number;
+  wine: number;
+  whiskey_200ml: number;
+
+  // Dynamic add-ons
+  dynamic_addons: CartItemAddon[];
+
+  additional_notes: string;
+
+  // Pricing
+  base_price: string;
+  customization_cost: string;
+  unit_price: string;
+  total_price: string;
+  customization_summary: string;
+  added_at: string;
+}
+
+// Customization options returned by /api/products/<slug>/customize/
+export interface AddonOption {
+  id: number;
+  type: string;
+  name: string;
+  price: string;
+  description: string;
+}
+
+export interface SizeOption {
+  id: number;
+  size: string;
+  display: string;
+  multiplier: string;
+}
+
+export interface FlavorOption {
+  id: number;
+  name: string;
+  multiplier: string;
+}
+
+export interface CustomizationOptions {
+  sizes: SizeOption[];
+  flavors: FlavorOption[];
+  addons: AddonOption[];
+}
+
+export interface CakeCustomizeResponse {
+  id: number;
+  name: string;
+  description: string;
+  price: string;
+  image_url: string | null;
+  layers: number;
+  covering: string;
+  preparation_days: number;
+  customization_options: CustomizationOptions;
+}
+
 
 // ============================================================================
 // SERVICE
@@ -229,6 +325,14 @@ class CartService {
   }): Promise<{ message: string; delivery_info: object }> {
     return await httpClient.post(ENDPOINTS.EXTERNAL.CART.DELIVERY, data);
   }
+
+  async getCakeCustomizationOptions(
+  slug: string
+): Promise<CakeCustomizeResponse> {
+  return await httpClient.get<CakeCustomizeResponse>(
+    `${ENDPOINTS.EXTERNAL.PRODUCTS.CUSTOMIZE}${slug}/customize/`
+  );
+}
 }
 
 export const cartService = new CartService();
