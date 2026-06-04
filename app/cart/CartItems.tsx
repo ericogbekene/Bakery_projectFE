@@ -44,6 +44,13 @@ const CartItemRow = ({ item }: { item: CartItem }) => {
       label: "Whiskey",
       value: String(item.whiskey_200ml),
     },
+    // Dynamic addons
+    ...(item.dynamic_addons ?? [])
+      .filter((a) => a.quantity > 0)
+      .map((a) => ({
+        label: a.addon_name,
+        value: String(a.quantity),
+      })),
     item.additional_notes && { label: "Notes", value: item.additional_notes },
   ].filter(Boolean) as { label: string; value: string }[];
 
