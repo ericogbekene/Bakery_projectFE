@@ -35,7 +35,6 @@ type FormType = z.infer<typeof formSchema>;
 
 const OrderForm = () => {
   const router = useRouter();
-  // FIX: useQueryClient must be called at component level, NOT inside onSubmit
   const queryClient = useQueryClient();
 
   const { data: cart } = useQuery({
@@ -57,6 +56,34 @@ const OrderForm = () => {
     },
   });
 
+  const initializePayment = async (orderNumber: string) => {
+    try {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/payments/initialize/`,
+        {
+          method: "POST",
+          headers: { 
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${localStorage.getItem("access_token")}`
+          },
+          credentials: "include",
+          body: JSON.stringify({ order_number: orderNumber }),
+        }
+      );
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Failed to initialize payment");
+      }
+
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error("Payment initialization error:", error);
+      throw error;
+    }
+  };
+
   const onSubmit = async (values: FormType) => {
     const payload = {
       customer_name: values.name,
@@ -70,6 +97,7 @@ const OrderForm = () => {
     };
 
     try {
+      // Step 1: Create the order
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/orders/create/`,
         {
@@ -77,7 +105,7 @@ const OrderForm = () => {
           headers: { "Content-Type": "application/json" },
           credentials: "include",
           body: JSON.stringify(payload),
-        },
+        }
       );
 
       if (!response.ok) {
@@ -86,13 +114,25 @@ const OrderForm = () => {
       }
 
       const data = await response.json();
+      const orderNumber = data.order.order_number;
 
-      // Clear cart cache so badge and cart page reset instantly
+      // Clear cart cache
       queryClient.invalidateQueries({ queryKey: ["cart"] });
       queryClient.invalidateQueries({ queryKey: ["cart-count"] });
 
-      // Redirect to confirmation page
-      router.push(`/order-confirmation?order=${data.order.order_number}`);
+      // Step 2: Initialize Paystack payment
+      const paymentData = await initializePayment(orderNumber);
+
+      // Step 3: Redirect to Paystack payment page
+      if (paymentData.payment_link) {
+        // Store order number in session storage for after payment return
+        sessionStorage.setItem("pending_order", orderNumber);
+        // Redirect to Paystack
+        window.location.href = paymentData.payment_link;
+      } else {
+        throw new Error("No payment link received");
+      }
+
     } catch (error: unknown) {
       const message =
         error instanceof Error ? error.message : "Failed to place order";
@@ -268,7 +308,7 @@ const OrderForm = () => {
           size="lg"
           disabled={form.formState.isSubmitting}
         >
-          {form.formState.isSubmitting ? "Placing order..." : "Place Order"}
+          {form.formState.isSubmitting ? "Processing..." : "Proceed to Payment"}
         </Button>
       </form>
     </Form>
