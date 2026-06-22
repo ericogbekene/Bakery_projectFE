@@ -23,6 +23,22 @@ interface OrderDetail {
   delivery?: OrderDelivery;
 }
 
+interface OrderDelivery {
+  delivery_date: string;
+  address: string;
+  city: string;
+}
+
+interface OrderDetail {
+  order_number: string;
+  customer_name: string;
+  customer_email: string;
+  total_amount: string | number;
+  payment_status: string;
+  status: string;
+  delivery?: OrderDelivery;
+}
+
 export default function CheckoutPage() {
   const params = useParams();
   const router = useRouter();

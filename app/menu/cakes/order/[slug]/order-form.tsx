@@ -95,10 +95,10 @@ const OrderForm = ({ productId, slug }: OrderFormProps) => {
   });
 
   const options = customizeData?.customization_options;
-  const legacyAddons = options?.addons.filter((a) => LEGACY_TYPES.includes(a.type)) ?? [];
-  const dynamicAddons = options?.addons.filter((a) => !LEGACY_TYPES.includes(a.type)) ?? [];
-  const flavors = options?.flavors ?? [];
-  const sizes = options?.sizes ?? [];
+  const legacyAddons = useMemo(() => options?.addons.filter((a) => LEGACY_TYPES.includes(a.type)) ?? [], [options]);
+  const dynamicAddons = useMemo(() => options?.addons.filter((a) => !LEGACY_TYPES.includes(a.type)) ?? [], [options]);
+  const flavors = useMemo(() => options?.flavors ?? [], [options]);
+  const sizes = useMemo(() => options?.sizes ?? [], [options]);
 
   const form = useForm<FormType>({
     resolver: zodResolver(formSchema),
