@@ -19,6 +19,8 @@ export interface AuthUser {
   email: string;
   first_name: string;
   last_name: string;
+  is_staff?: boolean;
+  is_superuser?: boolean;
 }
 
 export interface AuthResponse {
@@ -39,8 +41,10 @@ class AuthService {
    */
   async login(credentials: LoginCredentials): Promise<AuthResponse> {
     try {
-      console.log("1. Starting login...");
-      console.log("2. BASE_URL:", process.env.NEXT_PUBLIC_API_BASE_URL);
+      console.log("🔐 1. Starting login...");
+      console.log("🔐 2. BASE_URL:", process.env.NEXT_PUBLIC_API_BASE_URL);
+      console.log("🔐 3. Email:", credentials.email);
+      
       const response = await httpClient.post<{
         message: string;
         access: string;
@@ -50,7 +54,38 @@ class AuthService {
         email: credentials.email,
         password: credentials.password,
       });
-      console.log("3. Response:", response);
+      
+      console.log("✅ 4. Login response received");
+      console.log("✅ 5. Access token present:", !!response.access);
+      console.log("✅ 6. Refresh token present:", !!response.refresh);
+      console.log("✅ 7. User data present:", !!response.user);
+
+      // ✅ Explicitly store auth values in localStorage
+      if (typeof window !== "undefined") {
+        if (response.access) {
+          localStorage.setItem("access_token", response.access);
+          console.log("✅ 8. Access token stored in localStorage");
+          // Verify it was stored
+          const stored = localStorage.getItem("access_token");
+          console.log("✅ 9. Verified stored token:", stored ? "Yes (length: " + stored.length + ")" : "No");
+        } else {
+          console.error("❌ No access token in response!");
+        }
+        
+        if (response.refresh) {
+          localStorage.setItem("refresh_token", response.refresh);
+        }
+        
+        if (response.user) {
+          localStorage.setItem("user", JSON.stringify(response.user));
+          console.log("✅ 10. User data stored:", response.user.email);
+        }
+      }
+
+      // ✅ Also set token in httpClient for future requests
+      if (response.access) {
+        httpClient.setToken(response.access);
+      }
 
       return {
         success: true,
@@ -62,6 +97,7 @@ class AuthService {
         message: response.message,
       };
     } catch (error: unknown) {
+      console.error("❌ Login error:", error);
       return {
         success: false,
         error: this.handleAuthError(error),
@@ -71,11 +107,11 @@ class AuthService {
 
   /**
    * Register — POST /api/accounts/register/
-   * Django returns: { message, user_id }
-   * Note: user must verify email before logging in
    */
   async register(userData: RegisterData): Promise<AuthResponse> {
     try {
+      console.log("🔐 Starting registration...");
+      
       await httpClient.post("/accounts/register/", {
         email: userData.email,
         username: userData.username,
@@ -85,12 +121,15 @@ class AuthService {
         password_confirm: userData.password_confirm,
       });
 
+      console.log("✅ Registration successful");
+      
       return {
         success: true,
         message:
           "Registration successful. Please check your email to verify your account.",
       };
     } catch (error: unknown) {
+      console.error("❌ Registration error:", error);
       return {
         success: false,
         error: this.handleAuthError(error),
@@ -104,7 +143,10 @@ class AuthService {
   logout(): void {
     httpClient.clearTokens();
     if (typeof window !== "undefined") {
+      localStorage.removeItem("access_token");
+      localStorage.removeItem("refresh_token");
       localStorage.removeItem("user");
+      console.log("🔐 Logged out - tokens cleared");
     }
   }
 
@@ -112,6 +154,12 @@ class AuthService {
    * Check if user is authenticated
    */
   isAuthenticated(): boolean {
+    if (typeof window !== "undefined") {
+      const token = localStorage.getItem("access_token");
+      const isAuth = !!token;
+      console.log("🔐 isAuthenticated check:", isAuth);
+      return isAuth;
+    }
     return httpClient.isAuthenticated();
   }
 
@@ -132,12 +180,21 @@ class AuthService {
     return null;
   }
 
+  /**
+   * Get stored token (for debugging)
+   */
+  getToken(): string | null {
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("access_token");
+    }
+    return null;
+  }
+
   private handleAuthError(error: unknown): string {
     if (error instanceof APIError) {
       if (error.status === 401) return "Invalid email or password.";
       if (error.status === 400) {
         const data = error.data as Record<string, string[] | string>;
-        // Return first field error if available
         const firstKey = Object.keys(data)[0];
         if (firstKey && data[firstKey]) {
           const msg = data[firstKey];
