@@ -7,6 +7,22 @@ import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 
+interface OrderDelivery {
+  delivery_date: string;
+  address: string;
+  city: string;
+}
+
+interface OrderDetail {
+  order_number: string;
+  customer_name: string;
+  customer_email: string;
+  total_amount: string | number;
+  payment_status: string;
+  status: string;
+  delivery?: OrderDelivery;
+}
+
 export default function CheckoutPage() {
   const params = useParams();
   const router = useRouter();
@@ -14,7 +30,7 @@ export default function CheckoutPage() {
 
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState(false);
-  const [order, setOrder] = useState<any>(null);
+  const [order, setOrder] = useState<OrderDetail | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   // Check authentication
@@ -34,12 +50,12 @@ export default function CheckoutPage() {
       try {
         setLoading(true);
         const token = localStorage.getItem("access_token");
-        
+
         const response = await fetch(
           `${process.env.NEXT_PUBLIC_API_BASE_URL}/orders/${orderId}/checkout/`,
           {
             headers: {
-              "Authorization": `Bearer ${token}`,
+              Authorization: `Bearer ${token}`,
             },
           }
         );
@@ -59,9 +75,10 @@ export default function CheckoutPage() {
         const data = await response.json();
         setOrder(data);
         setError(null);
-      } catch (err: any) {
+      } catch (err) {
+        const message = err instanceof Error ? err.message : "Failed to load order details";
         console.error("Error fetching order:", err);
-        setError(err.message || "Failed to load order details");
+        setError(message);
       } finally {
         setLoading(false);
       }
@@ -89,10 +106,10 @@ export default function CheckoutPage() {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            "Authorization": `Bearer ${token}`,
+            Authorization: `Bearer ${token}`,
           },
-          body: JSON.stringify({ 
-            order_number: order.order_number 
+          body: JSON.stringify({
+            order_number: order.order_number,
           }),
         }
       );
@@ -109,9 +126,10 @@ export default function CheckoutPage() {
       } else {
         throw new Error("No payment link received");
       }
-    } catch (err: any) {
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Failed to initiate payment. Please try again.";
       console.error("Payment error:", err);
-      setError(err.message || "Failed to initiate payment. Please try again.");
+      setError(message);
       setProcessing(false);
     }
   };
@@ -159,7 +177,7 @@ export default function CheckoutPage() {
       <div className="container mx-auto px-4 py-16">
         <div className="max-w-lg mx-auto bg-white rounded-lg shadow-md p-6 text-center">
           <h2 className="text-xl font-semibold text-gray-900 mb-2">Order Not Found</h2>
-          <p className="text-gray-600 mb-6">We couldn't find the order you're looking for.</p>
+          <p className="text-gray-600 mb-6">We couldn&apos;t find the order you&apos;re looking for.</p>
           <Link href="/cart" className="block">
             <button className="w-full bg-primary hover:bg-primary/90 text-white font-medium py-2 px-4 rounded-md transition">
               Return to Cart
@@ -224,8 +242,8 @@ export default function CheckoutPage() {
   return (
     <div className="container mx-auto px-4 py-12">
       <div className="max-w-lg mx-auto">
-        <Link 
-          href="/cart" 
+        <Link
+          href="/cart"
           className="inline-flex items-center text-gray-600 hover:text-gray-900 mb-6"
         >
           ← Back to Cart
@@ -262,11 +280,11 @@ export default function CheckoutPage() {
                     <div className="flex justify-between">
                       <span className="text-gray-600">Delivery Date</span>
                       <span className="font-medium">
-                        {new Date(order.delivery.delivery_date).toLocaleDateString('en-US', {
-                          weekday: 'long',
-                          year: 'numeric',
-                          month: 'long',
-                          day: 'numeric'
+                        {new Date(order.delivery.delivery_date).toLocaleDateString("en-US", {
+                          weekday: "long",
+                          year: "numeric",
+                          month: "long",
+                          day: "numeric",
                         })}
                       </span>
                     </div>
