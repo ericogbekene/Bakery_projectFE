@@ -6,7 +6,6 @@ import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
-// ── Inner component that uses useSearchParams ──────────────────────────────
 function PaymentCallbackContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -25,7 +24,7 @@ function PaymentCallbackContent() {
         );
         if (response.ok) {
           const data = await response.json();
-          return data.order_number;
+          return data.order_number ?? null;
         }
       } catch (error) {
         console.error("Error fetching order:", error);
@@ -52,17 +51,35 @@ function PaymentCallbackContent() {
 
         if (response.ok) {
           const data = await response.json();
-          const orderNum = data.transaction?.order
-            ? await getOrderNumber(data.transaction.order)
-            : sessionStorage.getItem("pending_order");
 
-          setOrderNumber(orderNum);
-          setStatus("success");
+          // Try to get order number from API first, fall back to sessionStorage
+          let orderNum: string | null = null;
+
+          if (data.transaction?.order) {
+            orderNum = await getOrderNumber(data.transaction.order);
+          }
+
+          // Fall back to sessionStorage if API didn't return one
+          if (!orderNum) {
+            orderNum = sessionStorage.getItem("pending_order");
+          }
+
           sessionStorage.removeItem("pending_order");
 
-          setTimeout(() => {
-            router.push(`/order-confirmation?order=${orderNum}`);
-          }, 3000);
+          if (orderNum) {
+            setOrderNumber(orderNum);
+            setStatus("success");
+            setTimeout(() => {
+              router.push(`/order-confirmation?order=${orderNum}`);
+            }, 3000);
+          } else {
+            // Payment succeeded but we couldn't get the order number
+            // Still show success and redirect without order number
+            setStatus("success");
+            setTimeout(() => {
+              router.push(`/order-confirmation`);
+            }, 3000);
+          }
         } else {
           setStatus("failed");
         }
@@ -98,7 +115,7 @@ function PaymentCallbackContent() {
         </p>
         <div className="mt-6">
           <Link
-            href={`/order-confirmation?order=${orderNumber}`}
+            href={orderNumber ? `/order-confirmation?order=${orderNumber}` : `/order-confirmation`}
             className="text-primary hover:underline"
           >
             Click here if you are not redirected automatically
@@ -133,7 +150,6 @@ function PaymentCallbackContent() {
   );
 }
 
-// ── Fallback shown while searchParams resolves ─────────────────────────────
 function PaymentCallbackFallback() {
   return (
     <div className="container mx-auto px-4 py-16 text-center">
@@ -146,7 +162,6 @@ function PaymentCallbackFallback() {
   );
 }
 
-// ── Page export wraps content in Suspense ──────────────────────────────────
 export default function PaymentCallbackPage() {
   return (
     <Suspense fallback={<PaymentCallbackFallback />}>
