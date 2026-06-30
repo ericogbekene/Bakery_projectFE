@@ -35,14 +35,13 @@ export default function ForgotPasswordPage() {
       } else {
         setError(data?.email?.[0] || data?.message || "Something went wrong.");
       }
-    } catch (err) {
+    } catch {
       setError("Network error. Please try again.");
     } finally {
       setLoading(false);
     }
   };
 
-  // ── Success state ──────────────────────────────────────────────
   if (submitted) {
     return (
       <main className="bg-primary-100 flex min-h-screen items-center justify-center px-4 py-12">
@@ -52,10 +51,10 @@ export default function ForgotPasswordPage() {
             Check your email
           </h1>
           <p className="text-text">
-            If an account exists for <strong>{email}</strong>, we've sent a
+            If an account exists for <strong>{email}</strong>, we&apos;ve sent a
             password reset link. Please check your inbox.
           </p>
-          <p className="text-text text-sm">Didn't receive it? Check your spam folder.</p>
+          <p className="text-text text-sm">Didn&apos;t receive it? Check your spam folder.</p>
           <Button asChild size="lg" className="w-full">
             <Link href="/login">Back to Login</Link>
           </Button>
@@ -64,7 +63,6 @@ export default function ForgotPasswordPage() {
     );
   }
 
-  // ── Form state ─────────────────────────────────────────────────
   return (
     <main className="bg-primary-100 flex min-h-screen items-center justify-center px-4 py-12">
       <div className="w-full max-w-md space-y-8 rounded-2xl bg-white p-8 shadow-lg">
@@ -73,7 +71,7 @@ export default function ForgotPasswordPage() {
             Forgot Password
           </h1>
           <p className="text-text mt-2 text-sm">
-            Enter your email and we'll send you a reset link.
+            Enter your email and we&apos;ll send you a reset link.
           </p>
         </div>
 
