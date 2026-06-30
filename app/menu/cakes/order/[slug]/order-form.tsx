@@ -21,9 +21,8 @@ import { cn } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
-import { useForm , Resolver} from "react-hook-form";
+import { useForm, Resolver } from "react-hook-form";
 import { z } from "zod";
-
 
 const LEGACY_TYPES = ["topper", "candle", "birthday_card", "chocolate", "wine", "whiskey"];
 
@@ -50,8 +49,8 @@ const formSchema = z.object({
   flavour: z.array(z.string()).min(1, { message: "Select at least 1 flavour" }).max(2),
   size: z.string().min(1, { message: "Select a size" }),
   colours: z.array(z.string()).min(1, { message: "Select at least 1 colour" }).max(2),
-  legacy_extras: z.record(z.string(), z.coerce.number().min(0)).default({}),
-dynamic_extras: z.record(z.string(), z.coerce.number().min(0)).default({}),
+  legacy_extras: z.record(z.string(), z.coerce.number().min(0).default(0)).default({}),
+  dynamic_extras: z.record(z.string(), z.coerce.number().min(0).default(0)).default({}),
   notes: z.string().optional(),
 });
 
@@ -101,17 +100,17 @@ const OrderForm = ({ productId, slug }: OrderFormProps) => {
   const flavors = useMemo(() => options?.flavors ?? [], [options]);
   const sizes = useMemo(() => options?.sizes ?? [], [options]);
 
-const form = useForm<FormType>({
-  resolver: zodResolver(formSchema) as Resolver<FormType>,
-  defaultValues: {
-    flavour: [],
-    size: "",
-    colours: [],
-    legacy_extras: {},
-    dynamic_extras: {},
-    notes: "",
-  },
-});
+  const form = useForm<FormType>({
+    resolver: zodResolver(formSchema) as Resolver<FormType>,
+    defaultValues: {
+      flavour: [],
+      size: "",
+      colours: [],
+      legacy_extras: {},
+      dynamic_extras: {},
+      notes: "",
+    },
+  });
 
   const watchSize = form.watch("size");
   const watchFlavour = form.watch("flavour");
@@ -139,57 +138,51 @@ const form = useForm<FormType>({
     return sizedPrice + legacyCost + dynamicCost;
   }, [watchSize, watchLegacyExtras, watchDynamicExtras, options, sizes, legacyAddons, dynamicAddons, customizeData]);
 
-  // ✅ Button is only blocked when required fields (flavour, size, colours) are missing
   const canSubmit =
     watchFlavour.length > 0 &&
     !!watchSize &&
     watchColours.length > 0;
-  
-    <pre className="text-xs bg-red-50 p-2 rounded text-red-700">
-  {JSON.stringify(form.formState.errors, null, 2)}
-</pre>
 
   async function handleSubmit(data: FormType) {
-    console.log("FORM DATA:", JSON.stringify(data, null, 2));
-  setIsSubmitting(true);
+    setIsSubmitting(true);
 
-  try {
-    const legacyFields: Record<string, number> = {};
-    legacyAddons.forEach((addon) => {
-      const djangoField = LEGACY_ADDON_MAP[addon.type];
-      if (djangoField) {
-        legacyFields[djangoField] = data.legacy_extras[addon.name] ?? 0;  // ✅ removed ?.
-      }
-    });
+    try {
+      const legacyFields: Record<string, number> = {};
+      legacyAddons.forEach((addon) => {
+        const djangoField = LEGACY_ADDON_MAP[addon.type];
+        if (djangoField) {
+          legacyFields[djangoField] = data.legacy_extras[addon.name] ?? 0;
+        }
+      });
 
-    const dynamicAddonInputs: AddonInput[] = dynamicAddons
-      .filter((addon) => (data.dynamic_extras[addon.name] ?? 0) > 0)  // ✅ removed ?.
-      .map((addon) => ({
-        addon_id: addon.id,
-        quantity: data.dynamic_extras[addon.name],  // ✅ removed !
-      }));
+      const dynamicAddonInputs: AddonInput[] = dynamicAddons
+        .filter((addon) => (data.dynamic_extras[addon.name] ?? 0) > 0)
+        .map((addon) => ({
+          addon_id: addon.id,
+          quantity: data.dynamic_extras[addon.name],
+        }));
 
-    const payload = {
-      product_id: productId,
-      quantity: 1,
-      flavour_1: data.flavour[0] ?? "",
-      flavour_2: data.flavour[1] ?? "",
-      size: SIZE_TO_DJANGO[data.size] ?? data.size,
-      colours: data.colours.join(", "),
-      ...legacyFields,
-      addons: dynamicAddonInputs,
-      additional_notes: data.notes ?? "",
-    };
+      const payload = {
+        product_id: productId,
+        quantity: 1,
+        flavour_1: data.flavour[0] ?? "",
+        flavour_2: data.flavour[1] ?? "",
+        size: SIZE_TO_DJANGO[data.size] ?? data.size,
+        colours: data.colours.join(", "),
+        ...legacyFields,
+        addons: dynamicAddonInputs,
+        additional_notes: data.notes ?? "",
+      };
 
-    await cartService.addToCart(payload);
-    queryClient.invalidateQueries({ queryKey: ["cart"] });
-    queryClient.invalidateQueries({ queryKey: ["cart-count"] });
-    window.location.href = "/cart";
-  } catch (error: unknown) {
-    alert(error instanceof Error ? error.message : "Failed to add to cart");
-    setIsSubmitting(false);
+      await cartService.addToCart(payload);
+      queryClient.invalidateQueries({ queryKey: ["cart"] });
+      queryClient.invalidateQueries({ queryKey: ["cart-count"] });
+      window.location.href = "/cart";
+    } catch (error: unknown) {
+      alert(error instanceof Error ? error.message : "Failed to add to cart");
+      setIsSubmitting(false);
+    }
   }
-}
 
   if (isLoading) {
     return (
@@ -204,8 +197,6 @@ const form = useForm<FormType>({
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
-
-        
 
         {/* Flavour */}
         <FormField
@@ -244,7 +235,6 @@ const form = useForm<FormType>({
             </FormItem>
           )}
         />
-        
 
         {/* Size */}
         <FormField
@@ -318,100 +308,113 @@ const form = useForm<FormType>({
         />
 
         {/* Legacy Addons */}
-{legacyAddons.length > 0 && (
-  <div>
-    <p className="mb-3 text-sm font-medium">Add-ons</p>
-    <div className="grid grid-cols-1 gap-x-4 gap-y-6 lg:grid-cols-2">
-      {legacyAddons.map((addon) => (
-        <FormField
-          key={addon.id}
-          control={form.control}
-          name={`legacy_extras.${addon.name}`}
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>{addon.name}</FormLabel>
-              <FormControl>
-                <div className="space-y-1">
-                  <Input
-                    type="number"
-                    {...field}
-                    value={field.value ?? 0}
-                    onChange={(e) => {
-                      const v = parseInt(e.target.value, 10);
-                      field.onChange(isNaN(v) ? 0 : v);
-                    }}
-                    placeholder={`₦${Number(addon.price).toLocaleString()} per piece`}
-                    className="text-foreground"
-                    min="0"
-                  />
-                  <div className="hidden justify-end gap-2 lg:flex">
-                    <Button type="button" size="icon"
-                      className="bg-primary/20 text-primary hover:bg-primary/30 h-6 w-6"
-                      onClick={() => field.onChange((field.value ?? 0) + 1)}
-                    >+</Button>
-                    <Button type="button" size="icon"
-                      className="bg-primary/20 text-primary hover:bg-primary/30 h-6 w-6"
-                      onClick={() => field.onChange(Math.max((field.value ?? 0) - 1, 0))}
-                      disabled={(field.value ?? 0) === 0}
-                    >-</Button>
-                  </div>
-                </div>
-              </FormControl>
-            </FormItem>
-          )}
-        />
-      ))}
-    </div>
-  </div>
-)}
+        {legacyAddons.length > 0 && (
+          <div>
+            <p className="mb-3 text-sm font-medium">Add-ons</p>
+            <div className="grid grid-cols-1 gap-x-4 gap-y-6 lg:grid-cols-2">
+              {legacyAddons.map((addon) => (
+                <FormField
+                  key={addon.id}
+                  control={form.control}
+                  name={`legacy_extras.${addon.name}`}
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>{addon.name}</FormLabel>
+                      <FormControl>
+                        <div className="space-y-1">
+                          <Input
+                            type="number"
+                            value={field.value ?? 0}
+                            onChange={(e) => {
+                              const v = parseInt(e.target.value, 10);
+                              field.onChange(isNaN(v) ? 0 : Math.max(v, 0));
+                            }}
+                            onBlur={field.onBlur}
+                            name={field.name}
+                            ref={field.ref}
+                            placeholder={`₦${Number(addon.price).toLocaleString()} per piece`}
+                            className="text-foreground"
+                            min="0"
+                          />
+                          <div className="hidden justify-end gap-2 lg:flex">
+                            <Button
+                              type="button"
+                              size="icon"
+                              className="bg-primary/20 text-primary hover:bg-primary/30 h-6 w-6"
+                              onClick={() => field.onChange((field.value ?? 0) + 1)}
+                            >+</Button>
+                            <Button
+                              type="button"
+                              size="icon"
+                              className="bg-primary/20 text-primary hover:bg-primary/30 h-6 w-6"
+                              onClick={() => field.onChange(Math.max((field.value ?? 0) - 1, 0))}
+                              disabled={(field.value ?? 0) === 0}
+                            >-</Button>
+                          </div>
+                        </div>
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+              ))}
+            </div>
+          </div>
+        )}
 
-{/* Dynamic Addons */}
-{dynamicAddons.length > 0 && (
-  <div>
-    <p className="mb-3 text-sm font-medium">Extra Options</p>
-    <div className="grid grid-cols-1 gap-x-4 gap-y-6 lg:grid-cols-2">
-      {dynamicAddons.map((addon) => (
-        <FormField
-          key={addon.id}
-          control={form.control}
-          name={`dynamic_extras.${addon.name}`}
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>{addon.name}</FormLabel>
-              <FormControl>
-                <div className="space-y-1">
-                  <Input
-                    type="number"
-                    {...field}
-                    value={field.value ?? 0}
-                    onChange={(e) => {
-                      const v = parseInt(e.target.value, 10);
-                      field.onChange(isNaN(v) ? 0 : v);
-                    }}
-                    placeholder={`₦${Number(addon.price).toLocaleString()} per piece`}
-                    className="text-foreground"
-                    min="0"
-                  />
-                  <div className="hidden justify-end gap-2 lg:flex">
-                    <Button type="button" size="icon"
-                      className="bg-primary/20 text-primary hover:bg-primary/30 h-6 w-6"
-                      onClick={() => field.onChange((field.value ?? 0) + 1)}
-                    >+</Button>
-                    <Button type="button" size="icon"
-                      className="bg-primary/20 text-primary hover:bg-primary/30 h-6 w-6"
-                      onClick={() => field.onChange(Math.max((field.value ?? 0) - 1, 0))}
-                      disabled={(field.value ?? 0) === 0}
-                    >-</Button>
-                  </div>
-                </div>
-              </FormControl>
-            </FormItem>
-          )}
-        />
-      ))}
-    </div>
-  </div>
-)}
+        {/* Dynamic Addons */}
+        {dynamicAddons.length > 0 && (
+          <div>
+            <p className="mb-3 text-sm font-medium">Extra Options</p>
+            <div className="grid grid-cols-1 gap-x-4 gap-y-6 lg:grid-cols-2">
+              {dynamicAddons.map((addon) => (
+                <FormField
+                  key={addon.id}
+                  control={form.control}
+                  name={`dynamic_extras.${addon.name}`}
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>{addon.name}</FormLabel>
+                      <FormControl>
+                        <div className="space-y-1">
+                          <Input
+                            type="number"
+                            value={field.value ?? 0}
+                            onChange={(e) => {
+                              const v = parseInt(e.target.value, 10);
+                              field.onChange(isNaN(v) ? 0 : Math.max(v, 0));
+                            }}
+                            onBlur={field.onBlur}
+                            name={field.name}
+                            ref={field.ref}
+                            placeholder={`₦${Number(addon.price).toLocaleString()} per piece`}
+                            className="text-foreground"
+                            min="0"
+                          />
+                          <div className="hidden justify-end gap-2 lg:flex">
+                            <Button
+                              type="button"
+                              size="icon"
+                              className="bg-primary/20 text-primary hover:bg-primary/30 h-6 w-6"
+                              onClick={() => field.onChange((field.value ?? 0) + 1)}
+                            >+</Button>
+                            <Button
+                              type="button"
+                              size="icon"
+                              className="bg-primary/20 text-primary hover:bg-primary/30 h-6 w-6"
+                              onClick={() => field.onChange(Math.max((field.value ?? 0) - 1, 0))}
+                              disabled={(field.value ?? 0) === 0}
+                            >-</Button>
+                          </div>
+                        </div>
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Notes */}
         <FormField
           control={form.control}
@@ -437,7 +440,6 @@ const form = useForm<FormType>({
               ₦{totalPrice.toLocaleString()}
             </span>
           </div>
-          {/* ✅ Disabled only when flavour, size, or colours are missing — not add-ons */}
           <Button
             disabled={!canSubmit || isSubmitting}
             type="submit"
@@ -449,16 +451,7 @@ const form = useForm<FormType>({
         </div>
 
       </form>
-
-      <button
-  type="button"
-  onClick={() => console.log("ERRORS:", form.formState.errors)}
-  className="text-xs text-red-500"
->
-  Debug errors
-</button>
     </Form>
-    
   );
 };
 
