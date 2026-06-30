@@ -21,7 +21,7 @@ import { cn } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, Resolver } from "react-hook-form";
 import { z } from "zod";
 
 const LEGACY_TYPES = ["topper", "candle", "birthday_card", "chocolate", "wine", "whiskey"];
@@ -49,8 +49,8 @@ const formSchema = z.object({
   flavour: z.array(z.string()).min(1, { message: "Select at least 1 flavour" }).max(2),
   size: z.string().min(1, { message: "Select a size" }),
   colours: z.array(z.string()).min(1, { message: "Select at least 1 colour" }).max(2),
-  legacy_extras: z.record(z.string(), z.number().min(0)),
-  dynamic_extras: z.record(z.string(), z.number().min(0)),
+  legacy_extras: z.record(z.string(), z.coerce.number().min(0).default(0)).default({}),
+  dynamic_extras: z.record(z.string(), z.coerce.number().min(0).default(0)).default({}),
   notes: z.string().optional(),
 });
 
@@ -101,7 +101,7 @@ const OrderForm = ({ productId, slug }: OrderFormProps) => {
   const sizes = useMemo(() => options?.sizes ?? [], [options]);
 
   const form = useForm<FormType>({
-    resolver: zodResolver(formSchema),
+    resolver: zodResolver(formSchema) as Resolver<FormType>,
     defaultValues: {
       flavour: [],
       size: "",
@@ -113,6 +113,8 @@ const OrderForm = ({ productId, slug }: OrderFormProps) => {
   });
 
   const watchSize = form.watch("size");
+  const watchFlavour = form.watch("flavour");
+  const watchColours = form.watch("colours");
   const watchLegacyExtras = form.watch("legacy_extras");
   const watchDynamicExtras = form.watch("dynamic_extras");
 
@@ -135,6 +137,11 @@ const OrderForm = ({ productId, slug }: OrderFormProps) => {
 
     return sizedPrice + legacyCost + dynamicCost;
   }, [watchSize, watchLegacyExtras, watchDynamicExtras, options, sizes, legacyAddons, dynamicAddons, customizeData]);
+
+  const canSubmit =
+    watchFlavour.length > 0 &&
+    !!watchSize &&
+    watchColours.length > 0;
 
   async function handleSubmit(data: FormType) {
     setIsSubmitting(true);
@@ -317,25 +324,31 @@ const OrderForm = ({ productId, slug }: OrderFormProps) => {
                         <div className="space-y-1">
                           <Input
                             type="number"
-                            {...field}
-                            value={field.value || ""}
+                            value={field.value ?? 0}
                             onChange={(e) => {
                               const v = parseInt(e.target.value, 10);
-                              field.onChange(isNaN(v) ? 0 : v);
+                              field.onChange(isNaN(v) ? 0 : Math.max(v, 0));
                             }}
+                            onBlur={field.onBlur}
+                            name={field.name}
+                            ref={field.ref}
                             placeholder={`₦${Number(addon.price).toLocaleString()} per piece`}
                             className="text-foreground"
                             min="0"
                           />
                           <div className="hidden justify-end gap-2 lg:flex">
-                            <Button type="button" size="icon"
+                            <Button
+                              type="button"
+                              size="icon"
                               className="bg-primary/20 text-primary hover:bg-primary/30 h-6 w-6"
-                              onClick={() => field.onChange((field.value || 0) + 1)}
+                              onClick={() => field.onChange((field.value ?? 0) + 1)}
                             >+</Button>
-                            <Button type="button" size="icon"
+                            <Button
+                              type="button"
+                              size="icon"
                               className="bg-primary/20 text-primary hover:bg-primary/30 h-6 w-6"
-                              onClick={() => field.onChange(Math.max((field.value || 0) - 1, 0))}
-                              disabled={(field.value || 0) === 0}
+                              onClick={() => field.onChange(Math.max((field.value ?? 0) - 1, 0))}
+                              disabled={(field.value ?? 0) === 0}
                             >-</Button>
                           </div>
                         </div>
@@ -365,25 +378,31 @@ const OrderForm = ({ productId, slug }: OrderFormProps) => {
                         <div className="space-y-1">
                           <Input
                             type="number"
-                            {...field}
-                            value={field.value || ""}
+                            value={field.value ?? 0}
                             onChange={(e) => {
                               const v = parseInt(e.target.value, 10);
-                              field.onChange(isNaN(v) ? 0 : v);
+                              field.onChange(isNaN(v) ? 0 : Math.max(v, 0));
                             }}
+                            onBlur={field.onBlur}
+                            name={field.name}
+                            ref={field.ref}
                             placeholder={`₦${Number(addon.price).toLocaleString()} per piece`}
                             className="text-foreground"
                             min="0"
                           />
                           <div className="hidden justify-end gap-2 lg:flex">
-                            <Button type="button" size="icon"
+                            <Button
+                              type="button"
+                              size="icon"
                               className="bg-primary/20 text-primary hover:bg-primary/30 h-6 w-6"
-                              onClick={() => field.onChange((field.value || 0) + 1)}
+                              onClick={() => field.onChange((field.value ?? 0) + 1)}
                             >+</Button>
-                            <Button type="button" size="icon"
+                            <Button
+                              type="button"
+                              size="icon"
                               className="bg-primary/20 text-primary hover:bg-primary/30 h-6 w-6"
-                              onClick={() => field.onChange(Math.max((field.value || 0) - 1, 0))}
-                              disabled={(field.value || 0) === 0}
+                              onClick={() => field.onChange(Math.max((field.value ?? 0) - 1, 0))}
+                              disabled={(field.value ?? 0) === 0}
                             >-</Button>
                           </div>
                         </div>
@@ -422,7 +441,7 @@ const OrderForm = ({ productId, slug }: OrderFormProps) => {
             </span>
           </div>
           <Button
-            disabled={totalPrice === 0 || isSubmitting}
+            disabled={!canSubmit || isSubmitting}
             type="submit"
             size="lg"
             className="ml-auto w-full lg:w-44"
