@@ -25,7 +25,7 @@ class HttpClient {
   constructor() {
     // FIX: was ENDPOINTS.EXTERNAL_API which no longer exists.
     // Now correctly reads ENDPOINTS.BASE_URL which maps to
-    // NEXT_PUBLIC_API_BASE_URL env var (http://localhost:8000/api in dev).
+    // NEXT_PUBLIC_API_URL env var (http://localhost:8000/api in dev).
     this.client = axios.create({
       baseURL: ENDPOINTS.BASE_URL,
       timeout: 10000,

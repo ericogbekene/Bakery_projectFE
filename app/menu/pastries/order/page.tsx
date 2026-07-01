@@ -64,7 +64,7 @@ function OrderForm() {
     }
 
     const apiBase =
-      process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000/api";
+      process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api";
 
     fetch(
       `${apiBase}/products/${searchParams.get("slug") || ""}?product_type=pastry&page_size=100`,

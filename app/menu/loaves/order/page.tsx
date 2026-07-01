@@ -63,10 +63,10 @@ function OrderForm() {
       return;
     }
 
-    const apiBase =
-      process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000/api";
+const apiBase =
+  process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
-    fetch(`${apiBase}/products/?category=loaves&page_size=100`, {
+fetch(`${apiBase}/api/products/?category=loaves&page_size=100`, {
       credentials: "include",
     })
       .then((res) => res.json())

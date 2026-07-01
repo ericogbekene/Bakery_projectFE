@@ -1,33 +1,20 @@
-import image1 from "@/assets/images/13.webp";
-import image2 from "@/assets/images/2.webp";
-import image3 from "@/assets/images/3.webp";
+"use client";
 import { poltawskiNowy } from "@/lib/font";
+import { productService } from "@/lib/services/product-service";
 import { cn } from "@/lib/utils";
+import { useQuery } from "@tanstack/react-query";
 import { ArrowRightIcon } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import Container from "../shared/container";
 import { Button } from "../ui/button";
 
-const CATEGORIES = [
-  {
-    item: "Cakes",
-    image: image1,
-    link: "/menu/cakes",
-  },
-  {
-    item: "Pastries",
-    image: image2,
-    link: "/menu/pastries",
-  },
-  {
-    item: "Loaves",
-    image: image3,
-    link: "/menu/loaves",
-  },
-];
-
 const HomeCategories = () => {
+  const { data, isLoading, isError } = useQuery({
+    queryKey: ["categories"],
+    queryFn: () => productService.getCategories(),
+  });
+  const categories = data?.results ?? [];
   return (
     <Container className="space-y-8 pt-16 pb-8">
       <header className="space-y-4 text-center">
@@ -44,34 +31,60 @@ const HomeCategories = () => {
           treats.
         </p>
       </header>
-      <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
-        {CATEGORIES.map((category, index) => (
-          <div key={index} className="space-y-4">
-            <div className="bg-custom-green-100 flex aspect-[383/335] items-center justify-center rounded-xl">
-              <Image
-                src={category.image}
-                alt="image"
-                height={100}
-                width={100}
-                className="aspect-[365/272] w-full max-w-xs object-contain"
-              />
+      {isLoading && (
+        <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="space-y-4">
+              <div className="bg-custom-green-100 aspect-[383/335] animate-pulse rounded-xl" />
+              <div className="h-6 w-24 animate-pulse rounded bg-gray-200" />
             </div>
-            <div className="flex items-center justify-between">
-              <span className="text-dark-text font-semibold">
-                {category.item}
-              </span>
-              <Button variant={"ghost"} size={"lg"} asChild>
-                <Link
-                  href={category.link}
-                  className="text-gold-400 flex items-center space-x-2 text-base"
+          ))}
+        </div>
+      )}
+      {isError && (
+        <p className="text-center text-gray-500">
+          Couldn&apos;t load categories right now. Please try again later.
+        </p>
+      )}
+      {!isLoading && !isError && categories.length > 0 && (
+        <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
+          {categories.map((category) => (
+            <Link
+              key={category.id}
+              href={`/menu/${category.slug}`}
+              className="group space-y-4"
+            >
+              <div className="bg-custom-green-100 flex aspect-[383/335] items-center justify-center rounded-xl">
+                {category.image_url ? (
+                  <Image
+                    src={category.image_url}
+                    alt={category.name}
+                    height={100}
+                    width={100}
+                    className="aspect-[365/272] w-full max-w-xs object-contain transition-transform group-hover:scale-105"
+                  />
+                ) : (
+                  <div className="text-dark-text/40 text-sm">No image</div>
+                )}
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-dark-text font-semibold">
+                  {category.name}
+                </span>
+                <Button
+                  variant={"ghost"}
+                  size={"lg"}
+                  className="text-gold-400 pointer-events-none flex items-center space-x-2 text-base"
+                  asChild={false}
+                  tabIndex={-1}
                 >
-                  Explore <ArrowRightIcon className="h-4 w-4" />
-                </Link>
-              </Button>
-            </div>
-          </div>
-        ))}
-      </div>
+                  Explore <ArrowRightIcon className="ml-2 h-4 w-4" />
+                </Button>
+              </div>
+            </Link>
+          ))}
+        </div>
+      )}
     </Container>
   );
 };
