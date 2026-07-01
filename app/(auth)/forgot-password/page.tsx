@@ -19,15 +19,14 @@ export default function ForgotPasswordPage() {
     setError("");
 
     try {
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/accounts/password-reset/`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email }),
-        }
-      );
-
+   const res = await fetch(
+  `${process.env.NEXT_PUBLIC_API_URL}/api/accounts/password-reset/request/`,  // ← comma here
+  {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email }),
+  }
+);
       const data = await res.json();
 
       if (res.ok) {

@@ -13,7 +13,7 @@ const ENDPOINTS = {
   // ─── Base URLs ────────────────────────────────────────────────────────────
   // Set NEXT_PUBLIC_API_URL=http://localhost:8000/api in .env.local
   // for local dev. In production point it to your deployed Django API.
-  BASE_URL: process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api",
+  BASE_URL: `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/api`,
 
   // ─── External (Django) API endpoints ─────────────────────────────────────
   EXTERNAL: {

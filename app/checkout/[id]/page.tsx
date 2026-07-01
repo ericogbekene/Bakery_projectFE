@@ -23,22 +23,6 @@ interface OrderDetail {
   delivery?: OrderDelivery;
 }
 
-interface OrderDelivery {
-  delivery_date: string;
-  address: string;
-  city: string;
-}
-
-interface OrderDetail {
-  order_number: string;
-  customer_name: string;
-  customer_email: string;
-  total_amount: string | number;
-  payment_status: string;
-  status: string;
-  delivery?: OrderDelivery;
-}
-
 export default function CheckoutPage() {
   const params = useParams();
   const router = useRouter();
@@ -68,7 +52,7 @@ export default function CheckoutPage() {
         const token = localStorage.getItem("access_token");
 
         const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/orders/${orderId}/checkout/`,
+          `${process.env.NEXT_PUBLIC_API_URL}/api/orders/${orderId}/checkout/`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -117,7 +101,7 @@ export default function CheckoutPage() {
       }
 
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/payments/initialize/`,
+        `${process.env.NEXT_PUBLIC_API_URL}/api/payments/initialize/`,
         {
           method: "POST",
           headers: {

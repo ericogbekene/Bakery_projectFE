@@ -93,18 +93,18 @@ const OrderForm = () => {
       const formattedToken = token.startsWith('Bearer ') ? token : `Bearer ${token}`;
       console.log("🔍 Sending Authorization header:", formattedToken.substring(0, 30) + "...");
       
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/payments/initialize/`,
-        {
-          method: "POST",
-          headers: { 
-            "Content-Type": "application/json",
-            "Authorization": formattedToken,
-          },
-          credentials: "include",
-          body: JSON.stringify({ order_number: orderNumber }),
-        }
-      );
+const response = await fetch(
+  `${process.env.NEXT_PUBLIC_API_URL}/api/payments/initialize/`,
+  {
+    method: "POST",
+    headers: { 
+      "Content-Type": "application/json",
+      "Authorization": formattedToken,
+    },
+    credentials: "include",
+    body: JSON.stringify({ order_number: orderNumber }),
+  }
+);
 
       const responseText = await response.text();
       console.log("📡 Payment response status:", response.status);
@@ -155,7 +155,7 @@ const OrderForm = () => {
       
       try {
         const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/orders/create/`,
+          `${process.env.NEXT_PUBLIC_API_URL}/api/orders/create/`,
           {
             method: "POST",
             headers: { 
@@ -216,7 +216,7 @@ const OrderForm = () => {
       const formattedToken = token.startsWith('Bearer ') ? token : `Bearer ${token}`;
       
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/orders/create/`,
+        `${process.env.NEXT_PUBLIC_API_URL}/api/orders/create/`,
         {
           method: "POST",
           headers: { 
