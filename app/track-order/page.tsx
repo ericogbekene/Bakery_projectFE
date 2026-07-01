@@ -58,7 +58,7 @@ export default function Page() {
 
     try {
       const apiBase =
-        process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000/api";
+        process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api";
 
       const response = await fetch(
         `${apiBase}/orders/track/?order_number=${encodeURIComponent(orderNumber.trim())}`,

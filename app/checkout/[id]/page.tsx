@@ -68,7 +68,7 @@ export default function CheckoutPage() {
         const token = localStorage.getItem("access_token");
 
         const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_BASE_URL}/orders/${orderId}/checkout/`,
+          `${process.env.NEXT_PUBLIC_API_URL}/orders/${orderId}/checkout/`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -117,7 +117,7 @@ export default function CheckoutPage() {
       }
 
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/payments/initialize/`,
+        `${process.env.NEXT_PUBLIC_API_URL}/payments/initialize/`,
         {
           method: "POST",
           headers: {

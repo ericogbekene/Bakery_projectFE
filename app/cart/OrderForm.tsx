@@ -94,7 +94,7 @@ const OrderForm = () => {
       console.log("🔍 Sending Authorization header:", formattedToken.substring(0, 30) + "...");
       
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/payments/initialize/`,
+        `${process.env.NEXT_PUBLIC_API_URL}/payments/initialize/`,
         {
           method: "POST",
           headers: { 
@@ -155,7 +155,7 @@ const OrderForm = () => {
       
       try {
         const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_BASE_URL}/orders/create/`,
+          `${process.env.NEXT_PUBLIC_API_URL}/orders/create/`,
           {
             method: "POST",
             headers: { 
@@ -216,7 +216,7 @@ const OrderForm = () => {
       const formattedToken = token.startsWith('Bearer ') ? token : `Bearer ${token}`;
       
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/orders/create/`,
+        `${process.env.NEXT_PUBLIC_API_URL}/orders/create/`,
         {
           method: "POST",
           headers: { 

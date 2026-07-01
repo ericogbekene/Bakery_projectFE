@@ -16,7 +16,7 @@ function PaymentCallbackContent() {
     const getOrderNumber = async (orderId: number): Promise<string | null> => {
       try {
         const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_BASE_URL}/orders/${orderId}/`,
+          `${process.env.NEXT_PUBLIC_API_URL}/orders/${orderId}/`,
           {
             method: "GET",
             headers: { "Content-Type": "application/json" },
@@ -42,7 +42,7 @@ function PaymentCallbackContent() {
 
       try {
         const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_BASE_URL}/payments/verify/${reference}/`,
+          `${process.env.NEXT_PUBLIC_API_URL}/payments/verify/${reference}/`,
           {
             method: "GET",
             headers: { "Content-Type": "application/json" },
