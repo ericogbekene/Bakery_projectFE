@@ -14,91 +14,8 @@ export interface CartItemProduct {
   thumbnail_url: string | null;
 }
 
-export interface CartItem {
-  id: number;
-  product: CartItemProduct;
-  quantity: number;
+export type FulfillmentType = "delivery" | "pickup";
 
-  // Cake customization
-  flavour_1: string;
-  flavour_2: string;
-  size: string;
-  colours: string;
-
-  // Add-ons
-  cake_topper: number;
-  candle: number;
-  birthday_card: number;
-  chocolate: number;
-  wine: number;
-  whiskey_200ml: number;
-
-  additional_notes: string;
-
-  // Pricing
-  base_price: string;
-  customization_cost: string;
-  unit_price: string;
-  total_price: string; // NOTE: serializer exposes this as total_price
-  customization_summary: string;
-  added_at: string;
-}
-
-export interface Cart {
-  id: number;
-  items: CartItem[]; // FIX: Django returns `items` not `cart_items`
-  item_count: number; // FIX: Django returns `item_count` not `total_items`
-  subtotal: string;
-  delivery_cost: string;
-  grand_total: string; // FIX: Django returns `grand_total` not `total_price`
-  created_at: string;
-  updated_at: string;
-}
-
-
-export interface AddonInput {
-  addon_id: number;
-  quantity: number;
-}
-
-// Full payload for adding a cake to cart — matches Django AddToCartSerializer
-export interface AddToCartPayload {
-  product_id: number;
-  quantity?: number;
-  flavour_1?: string;
-  flavour_2?: string;
-  size?: string;
-  colours?: string;
-  cake_topper?: number;
-  candle?: number;
-  birthday_card?: number;
-  chocolate?: number;
-  wine?: number;
-  whiskey_200ml?: number;
-  addons?: AddonInput[];
-  additional_notes?: string;
-  
-
-}
-
-export interface UpdateCartItemPayload {
-  quantity: number;
-  action: "set" | "increase" | "decrease";
-}
-
-export interface CartItemCount {
-  count: number;
-}
-
-export interface CartSummary {
-  item_count: number;
-  subtotal: string;
-  delivery_cost: string;
-  grand_total: string;
-}
-
-
-// Add this new type
 export interface CartItemAddon {
   id: number;
   addon: number;
@@ -109,7 +26,6 @@ export interface CartItemAddon {
   total_cost: string;
 }
 
-// Update CartItem — add dynamic_addons field
 export interface CartItem {
   id: number;
   product: CartItemProduct;
@@ -138,9 +54,60 @@ export interface CartItem {
   base_price: string;
   customization_cost: string;
   unit_price: string;
-  total_price: string;
+  total_price: string; // NOTE: serializer exposes this as total_price
   customization_summary: string;
   added_at: string;
+}
+
+export interface Cart {
+  id: number;
+  fulfillment_type: FulfillmentType; // NEW
+  items: CartItem[]; // FIX: Django returns `items` not `cart_items`
+  item_count: number; // FIX: Django returns `item_count` not `total_items`
+  subtotal: string;
+  delivery_cost: string;
+  grand_total: string; // FIX: Django returns `grand_total` not `total_price`
+  created_at: string;
+  updated_at: string;
+}
+
+export interface AddonInput {
+  addon_id: number;
+  quantity: number;
+}
+
+// Full payload for adding a cake to cart — matches Django AddToCartSerializer
+export interface AddToCartPayload {
+  product_id: number;
+  quantity?: number;
+  flavour_1?: string;
+  flavour_2?: string;
+  size?: string;
+  colours?: string;
+  cake_topper?: number;
+  candle?: number;
+  birthday_card?: number;
+  chocolate?: number;
+  wine?: number;
+  whiskey_200ml?: number;
+  addons?: AddonInput[];
+  additional_notes?: string;
+}
+
+export interface UpdateCartItemPayload {
+  quantity: number;
+  action: "set" | "increase" | "decrease";
+}
+
+export interface CartItemCount {
+  count: number;
+}
+
+export interface CartSummary {
+  item_count: number;
+  subtotal: string;
+  delivery_cost: string;
+  grand_total: string;
 }
 
 // Customization options returned by /api/products/<slug>/customize/
@@ -183,6 +150,13 @@ export interface CakeCustomizeResponse {
   customization_options: CustomizationOptions;
 }
 
+// NEW — delivery zone returned by /api/delivery/zones/
+export interface DeliveryZone {
+  id: number;
+  state: string;
+  state_display: string;
+  fee: string;
+}
 
 // ============================================================================
 // SERVICE
@@ -192,7 +166,6 @@ class CartService {
   /**
    * Get the current cart.
    * Works for both guests (session) and logged-in users.
-   * FIX: was ENDPOINTS.EXTERNAL.CART.LIST → /cart/cart/ (doubled)
    */
   async getCart(): Promise<Cart> {
     return await httpClient.get<Cart>(ENDPOINTS.EXTERNAL.CART.ROOT);
@@ -210,12 +183,6 @@ class CartService {
 
   /**
    * Add a product to the cart with full cake customization.
-   *
-   * FIX: Old signature was addToCart(productId, quantity) — too simple.
-   *      Now accepts the full AddToCartPayload so cake customizations
-   *      (flavour, size, colours, add-ons) are sent to Django correctly.
-   * FIX: Endpoint was CART.ADD → /cart/cart/add/ (doubled)
-   *      Now uses ENDPOINTS.EXTERNAL.CART.ADD → /cart/add/
    */
   async addToCart(payload: AddToCartPayload): Promise<{
     message: string;
@@ -235,16 +202,12 @@ class CartService {
       wine: 0,
       whiskey_200ml: 0,
       additional_notes: "",
-      ...payload, // caller values override defaults
+      ...payload,
     });
   }
 
   /**
    * Update a cart item's quantity by its item ID.
-   *
-   * FIX: Old version called addToCart/removeFromCart by product_id.
-   *      Django uses item ID (not product ID) for updates.
-   *      Endpoint: PATCH /cart/items/<item_id>/
    */
   async updateCartItem(
     itemId: number,
@@ -262,8 +225,6 @@ class CartService {
 
   /**
    * Remove a cart item by its item ID.
-   * FIX: Old version POSTed to /cart/cart/remove/ which doesn't exist.
-   *      Django uses DELETE /cart/items/<item_id>/
    */
   async removeCartItem(itemId: number): Promise<{
     message: string;
@@ -274,8 +235,6 @@ class CartService {
 
   /**
    * Clear the entire cart.
-   * FIX: Old version POSTed to /cart/cart/clear/ which doesn't exist.
-   *      Django uses DELETE /cart/
    */
   async clearCart(): Promise<{ message: string; cart: Cart }> {
     return await httpClient.delete(ENDPOINTS.EXTERNAL.CART.ROOT);
@@ -310,6 +269,7 @@ class CartService {
 
   /**
    * Save delivery information to the cart.
+   * Fee is auto-calculated server-side based on the selected state.
    */
   async saveDeliveryInfo(data: {
     full_name: string;
@@ -326,13 +286,41 @@ class CartService {
     return await httpClient.post(ENDPOINTS.EXTERNAL.CART.DELIVERY, data);
   }
 
+  /**
+   * NEW — Set the cart's fulfillment type (pickup or delivery).
+   */
+  async setFulfillmentType(
+    fulfillmentType: FulfillmentType,
+  ): Promise<{ message: string; cart: Cart }> {
+    return await httpClient.post(ENDPOINTS.EXTERNAL.CART.FULFILLMENT_TYPE, {
+      fulfillment_type: fulfillmentType,
+    });
+  }
+
+  /**
+   * NEW — Get all active delivery zones (for the state dropdown at checkout).
+   * Defensively unwraps DRF pagination in case pagination_class is enabled
+   * on this endpoint (globally or per-view) — handles both a bare array
+   * response and a paginated {results: [...]} response.
+   */
+  async getDeliveryZones(): Promise<DeliveryZone[]> {
+    const res = await httpClient.get<
+      DeliveryZone[] | { results: DeliveryZone[] }
+    >(ENDPOINTS.EXTERNAL.DELIVERY.ZONES);
+
+    if (Array.isArray(res)) {
+      return res;
+    }
+    return res?.results ?? [];
+  }
+
   async getCakeCustomizationOptions(
-  slug: string
-): Promise<CakeCustomizeResponse> {
-  return await httpClient.get<CakeCustomizeResponse>(
-    `${ENDPOINTS.EXTERNAL.PRODUCTS.CUSTOMIZE}${slug}/customize/`
-  );
-}
+    slug: string,
+  ): Promise<CakeCustomizeResponse> {
+    return await httpClient.get<CakeCustomizeResponse>(
+      `${ENDPOINTS.EXTERNAL.PRODUCTS.CUSTOMIZE}${slug}/customize/`,
+    );
+  }
 }
 
 export const cartService = new CartService();

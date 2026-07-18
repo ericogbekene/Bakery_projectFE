@@ -35,14 +35,6 @@ const LEGACY_ADDON_MAP: Record<string, string> = {
   whiskey: "whiskey_200ml",
 };
 
-const SIZE_TO_DJANGO: Record<string, string> = {
-  "6 Inches": "6",
-  "8 Inches": "8",
-  "10 Inches": "10",
-  "12 Inches": "12",
-  "14 Inches": "14",
-};
-
 const COLOURS = ["White", "Pink", "Blue", "Purple", "Green", "Yellow"];
 
 const formSchema = z.object({
@@ -118,11 +110,19 @@ const OrderForm = ({ productId, slug }: OrderFormProps) => {
   const watchLegacyExtras = form.watch("legacy_extras");
   const watchDynamicExtras = form.watch("dynamic_extras");
 
+  // watchSize now stores the size's *display* label (unchanged, so the
+  // dropdown UI still shows the friendly label). We look up the matching
+  // SizeOption to read both the multiplier (for the live preview) and the
+  // real backend `size` code (for what actually gets submitted).
+  const selectedSizeOption = useMemo(
+    () => sizes.find((s) => s.display === watchSize),
+    [sizes, watchSize],
+  );
+
   const totalPrice = useMemo(() => {
     if (!options) return 0;
     const basePrice = Number(customizeData?.price ?? 0);
-    const sizeOption = sizes.find((s) => s.display === watchSize);
-    const sizeMultiplier = sizeOption ? Number(sizeOption.multiplier) : 1;
+    const sizeMultiplier = selectedSizeOption ? Number(selectedSizeOption.multiplier) : 1;
     const sizedPrice = basePrice * sizeMultiplier;
 
     const legacyCost = legacyAddons.reduce((sum, addon) => {
@@ -136,7 +136,7 @@ const OrderForm = ({ productId, slug }: OrderFormProps) => {
     }, 0);
 
     return sizedPrice + legacyCost + dynamicCost;
-  }, [watchSize, watchLegacyExtras, watchDynamicExtras, options, sizes, legacyAddons, dynamicAddons, customizeData]);
+  }, [selectedSizeOption, watchLegacyExtras, watchDynamicExtras, options, legacyAddons, dynamicAddons, customizeData]);
 
   const canSubmit =
     watchFlavour.length > 0 &&
@@ -162,12 +162,18 @@ const OrderForm = ({ productId, slug }: OrderFormProps) => {
           quantity: data.dynamic_extras[addon.name],
         }));
 
+      // Send the real backend size code (e.g. "6", "8", "10") rather than
+      // translating the display label through a hardcoded map — the code
+      // is already available on the matched SizeOption from the API, so
+      // there's nothing to keep in sync and no risk of a silent mismatch.
+      const sizeCode = selectedSizeOption?.size ?? data.size;
+
       const payload = {
         product_id: productId,
         quantity: 1,
         flavour_1: data.flavour[0] ?? "",
         flavour_2: data.flavour[1] ?? "",
-        size: SIZE_TO_DJANGO[data.size] ?? data.size,
+        size: sizeCode,
         colours: data.colours.join(", "),
         ...legacyFields,
         addons: dynamicAddonInputs,
