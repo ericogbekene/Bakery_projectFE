@@ -54,19 +54,19 @@ export interface CartItem {
   base_price: string;
   customization_cost: string;
   unit_price: string;
-  total_price: string; // NOTE: serializer exposes this as total_price
+  total_price: string;
   customization_summary: string;
   added_at: string;
 }
 
 export interface Cart {
   id: number;
-  fulfillment_type: FulfillmentType; // NEW
-  items: CartItem[]; // FIX: Django returns `items` not `cart_items`
-  item_count: number; // FIX: Django returns `item_count` not `total_items`
+  fulfillment_type: FulfillmentType;
+  items: CartItem[];
+  item_count: number;
   subtotal: string;
   delivery_cost: string;
-  grand_total: string; // FIX: Django returns `grand_total` not `total_price`
+  grand_total: string;
   created_at: string;
   updated_at: string;
 }
@@ -76,7 +76,6 @@ export interface AddonInput {
   quantity: number;
 }
 
-// Full payload for adding a cake to cart — matches Django AddToCartSerializer
 export interface AddToCartPayload {
   product_id: number;
   quantity?: number;
@@ -110,7 +109,6 @@ export interface CartSummary {
   grand_total: string;
 }
 
-// Customization options returned by /api/products/<slug>/customize/
 export interface AddonOption {
   id: number;
   type: string;
@@ -150,12 +148,14 @@ export interface CakeCustomizeResponse {
   customization_options: CustomizationOptions;
 }
 
-// NEW — delivery zone returned by /api/delivery/zones/
+// ============================================================================
+// DELIVERY TYPES — aligned to DeliveryZoneListSerializer
+// ============================================================================
+
 export interface DeliveryZone {
   id: number;
-  state: string;
-  state_display: string;
-  fee: string;
+  area_name: string;        // matches serializer field
+  fee: string;              // matches serializer field
 }
 
 // ============================================================================
@@ -163,17 +163,10 @@ export interface DeliveryZone {
 // ============================================================================
 
 class CartService {
-  /**
-   * Get the current cart.
-   * Works for both guests (session) and logged-in users.
-   */
   async getCart(): Promise<Cart> {
     return await httpClient.get<Cart>(ENDPOINTS.EXTERNAL.CART.ROOT);
   }
 
-  /**
-   * Get just the cart item count (lightweight, good for navbar badge).
-   */
   async getCartCount(): Promise<number> {
     const res = await httpClient.get<CartItemCount>(
       ENDPOINTS.EXTERNAL.CART.COUNT,
@@ -181,9 +174,6 @@ class CartService {
     return res.count;
   }
 
-  /**
-   * Add a product to the cart with full cake customization.
-   */
   async addToCart(payload: AddToCartPayload): Promise<{
     message: string;
     cart_item: CartItem;
@@ -206,9 +196,6 @@ class CartService {
     });
   }
 
-  /**
-   * Update a cart item's quantity by its item ID.
-   */
   async updateCartItem(
     itemId: number,
     payload: UpdateCartItemPayload,
@@ -223,9 +210,6 @@ class CartService {
     );
   }
 
-  /**
-   * Remove a cart item by its item ID.
-   */
   async removeCartItem(itemId: number): Promise<{
     message: string;
     cart_item_count: number;
@@ -233,23 +217,14 @@ class CartService {
     return await httpClient.delete(`${ENDPOINTS.EXTERNAL.CART.ITEM}${itemId}/`);
   }
 
-  /**
-   * Clear the entire cart.
-   */
   async clearCart(): Promise<{ message: string; cart: Cart }> {
     return await httpClient.delete(ENDPOINTS.EXTERNAL.CART.ROOT);
   }
 
-  /**
-   * Get cart summary (totals only, no items).
-   */
   async getCartSummary(): Promise<CartSummary> {
     return await httpClient.get<CartSummary>(ENDPOINTS.EXTERNAL.CART.SUMMARY);
   }
 
-  /**
-   * Calculate price for a cake configuration before adding to cart.
-   */
   async calculatePrice(payload: Omit<AddToCartPayload, "quantity">): Promise<{
     product_id: number;
     product_name: string;
@@ -267,18 +242,13 @@ class CartService {
     );
   }
 
-  /**
-   * Save delivery information to the cart.
-   * Fee is auto-calculated server-side based on the selected state.
-   */
   async saveDeliveryInfo(data: {
     full_name: string;
     email: string;
     phone: string;
     address: string;
     city: string;
-    state?: string;
-    postal_code?: string;
+    area_name?: string;          // matches form field
     delivery_date: string;
     delivery_time_slot?: string;
     special_instructions?: string;
@@ -286,9 +256,6 @@ class CartService {
     return await httpClient.post(ENDPOINTS.EXTERNAL.CART.DELIVERY, data);
   }
 
-  /**
-   * NEW — Set the cart's fulfillment type (pickup or delivery).
-   */
   async setFulfillmentType(
     fulfillmentType: FulfillmentType,
   ): Promise<{ message: string; cart: Cart }> {
@@ -297,12 +264,6 @@ class CartService {
     });
   }
 
-  /**
-   * NEW — Get all active delivery zones (for the state dropdown at checkout).
-   * Defensively unwraps DRF pagination in case pagination_class is enabled
-   * on this endpoint (globally or per-view) — handles both a bare array
-   * response and a paginated {results: [...]} response.
-   */
   async getDeliveryZones(): Promise<DeliveryZone[]> {
     const res = await httpClient.get<
       DeliveryZone[] | { results: DeliveryZone[] }

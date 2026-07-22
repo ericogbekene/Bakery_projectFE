@@ -95,7 +95,7 @@ interface SavedDeliveryInfo {
   phone?: string;
   address?: string;
   city?: string;
-  state?: string;
+  area_name?: string;
   postal_code?: string;
 }
 
@@ -215,8 +215,8 @@ const OrderForm = () => {
     if (!form.getValues("deliveryCity") && savedDeliveryInfo.city) {
       form.setValue("deliveryCity", savedDeliveryInfo.city);
     }
-    if (!form.getValues("deliveryState") && savedDeliveryInfo.state) {
-      form.setValue("deliveryState", savedDeliveryInfo.state);
+    if (!form.getValues("deliveryState") && savedDeliveryInfo.area_name) {
+      form.setValue("deliveryState", savedDeliveryInfo.area_name);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [savedDeliveryInfo]);
@@ -259,7 +259,7 @@ const OrderForm = () => {
         phone: watchedPhone,
         address: watchedDeliveryAddress,
         city: watchedDeliveryCity,
-        state: selectedState,
+        area_name: selectedState,
         delivery_date: watchedDeliveryDate,
       });
       queryClient.invalidateQueries({ queryKey: ["cart"] });
@@ -628,7 +628,7 @@ const OrderForm = () => {
               name="deliveryState"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-dark-text">State</FormLabel>
+                  <FormLabel className="text-dark-text">FCT Area</FormLabel>
                   <Select
                     onValueChange={field.onChange}
                     value={field.value}
@@ -639,16 +639,16 @@ const OrderForm = () => {
                         <SelectValue
                           placeholder={
                             zonesLoading
-                              ? "Loading states..."
-                              : "Select your state"
+                              ? "Loading areas..."
+                              : "Select your area"
                           }
                         />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
                       {deliveryZones?.map((zone) => (
-                        <SelectItem key={zone.state} value={zone.state}>
-                          {zone.state_display} — ₦
+                        <SelectItem key={zone.id} value={zone.area_name}>
+                          {zone.area_name} — ₦
                           {Number(zone.fee).toLocaleString()}
                         </SelectItem>
                       ))}
@@ -656,7 +656,7 @@ const OrderForm = () => {
                   </Select>
                   {deliveryZones?.length === 0 && !zonesLoading && (
                     <p className="text-sm text-amber-600">
-                      We currently don&apos;t deliver to any listed states —
+                      We currently don&apos;t deliver to any listed areas —
                       please choose pickup instead.
                     </p>
                   )}
